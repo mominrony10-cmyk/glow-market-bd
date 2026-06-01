@@ -34,14 +34,14 @@ export default function SeoContentShowcase() {
       <div className="border-t border-zinc-100 w-full mb-10"></div>
 
       {/* Main SEO Article heading */}
-      <h2 className="text-xl sm:text-2xl lg:text-3xl font-extrabold text-zinc-900 tracking-tight leading-snug max-w-5xl">
-        What Kinds of Beauty Products and Cosmetic Items Does Beauty Booth Offer?
-      </h2>
+      <h3 className="text-xl sm:text-2xl lg:text-3xl font-extrabold text-zinc-900 tracking-tight leading-snug max-w-5xl">
+        What Kinds of Beauty Products and Cosmetic Items Does Glow Market BD Offer?
+      </h3>
 
       {/* Toggleable SEO Description */}
       <div className="text-sm sm:text-base text-zinc-600 font-medium leading-relaxed mt-4 max-w-6xl">
         <p>
-          Beauty Booth is Bangladesh leading online beauty and skincare destination.
+          Glow Market BD is Bangladesh leading online beauty and skincare destination.
           {isExpanded && (
             <span className="inline transition-opacity duration-500 ease-in-out">
               {" "}We are pioneering the online beauty storefront industry by bringing you 100% genuine skincare, makeup, and health imports directly to your doorstep. We specialize in verified authentic products imported directly from leading dermatological laboratories in South Korea, Japan, Thailand, and Europe.

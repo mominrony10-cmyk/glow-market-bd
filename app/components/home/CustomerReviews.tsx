@@ -4,7 +4,7 @@ export default function CustomerReviews() {
   const reviews = [
     {
       name: "Tania Chowdhury",
-      comment: "I always buy my Beauty of Joseon sunscreen from Beauty Booth. 100% genuine imported items. Delivery inside Dhaka took less than 24 hours!",
+      comment: "I always buy my Beauty of Joseon sunscreen from Glow Market BD. 100% genuine imported items. Delivery inside Dhaka took less than 24 hours!",
       stars: 5,
       ref: "BOJ Sunscreen"
     },

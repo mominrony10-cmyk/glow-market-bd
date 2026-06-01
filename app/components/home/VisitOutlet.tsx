@@ -39,8 +39,8 @@ export default function VisitOutlet() {
           <div className="relative w-full h-[380px] sm:h-[420px] rounded-3xl overflow-hidden border border-zinc-200/80 shadow-md bg-zinc-100 group">
             {/* The Interactive Google Map */}
             <iframe
-              title="Beauty Booth Faridpur Bangladesh Showroom Location"
-              src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3651.8804000492856!2d90.42223847602283!3d23.751609588724772!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3755b866c1f1ec71%3A0xc07bc77f240edc3!2sBeauty%20Booth%20Bangladesh!5e0!3m2!1sen!2sbd!4v1716568000000!5m2!1sen!2sbd"
+              title="Glow Market BD Faridpur Bangladesh Showroom Location"
+              src="https://maps.google.com/maps?q=Faridpur+Sadar,+Faridpur&t=&z=13&ie=UTF8&iwloc=&output=embed"
               className="w-full h-full border-0 grayscale-[20%] hover:grayscale-0 transition-all duration-700"
               allowFullScreen={true}
               loading="lazy"
@@ -51,7 +51,7 @@ export default function VisitOutlet() {
               <div className="flex items-start justify-between gap-3">
                 <div>
                   <h4 className="font-extrabold text-zinc-900 text-sm leading-tight">
-                    Beauty Booth Bangladesh
+                    Glow Market BD
                   </h4>
                   <p className="text-[11px] text-zinc-500 mt-1 leading-normal font-medium">
                     Faridpur sadar, Faridpur
@@ -74,7 +74,7 @@ export default function VisitOutlet() {
                 <div className="flex gap-2 items-center mt-0.5">
                   {/* Share Link Icon */}
                   <a
-                    href="https://maps.app.goo.gl/3f822x9Jp4"
+                    href="https://www.google.com/maps/search/?api=1&query=Faridpur+Sadar,+Faridpur"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-zinc-400 hover:text-zinc-600 p-1 hover:bg-zinc-100 rounded transition-colors"
@@ -85,7 +85,7 @@ export default function VisitOutlet() {
                   </a>
                   {/* Directions Icon */}
                   <a
-                    href="https://maps.app.goo.gl/3f822x9Jp4"
+                    href="https://www.google.com/maps/search/?api=1&query=Faridpur+Sadar,+Faridpur"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-blue-600 hover:text-blue-800 p-1 hover:bg-blue-50 rounded-full transition-colors"
@@ -100,7 +100,7 @@ export default function VisitOutlet() {
 
             {/* Float Overlay: Open in Maps Button (Top-Right) */}
             <a
-              href="https://maps.app.goo.gl/3f822x9Jp4"
+              href="https://www.google.com/maps/search/?api=1&query=Faridpur+Sadar,+Faridpur"
               target="_blank"
               rel="noopener noreferrer"
               className="absolute top-3 right-3 sm:top-4 sm:right-4 bg-white hover:bg-zinc-50 text-zinc-800 text-[11px] font-bold px-3 py-2 rounded-lg shadow-md border border-zinc-200/80 flex items-center gap-1.5 transition-all active:scale-95 duration-100 z-10"
