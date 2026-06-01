@@ -253,11 +253,14 @@ export default function GlobalOverlays() {
 
         {/* Account Tab */}
         <button
-          onClick={() => {}}
-          className="flex flex-col items-center gap-0.5 flex-1 py-1"
+          onClick={() => {
+            router.push("/account");
+          }}
+          className="flex flex-col items-center gap-0.5 flex-1 relative py-1"
         >
-          <HugeiconsIcon icon={UserIcon} size={20} className="text-zinc-400 hover:text-zinc-600" />
-          <span className="text-[10px] font-bold text-zinc-400">Account</span>
+          {pathname === "/account" && <div className="absolute top-0 w-8 h-1 bg-[#FF1A58] rounded-full" />}
+          <HugeiconsIcon icon={UserIcon} size={20} className={pathname === "/account" ? "text-[#FF1A58]" : "text-zinc-400 hover:text-[#FF1A58]"} />
+          <span className={`text-[10px] ${pathname === "/account" ? "font-black text-gray-900" : "font-bold text-zinc-400"}`}>Account</span>
         </button>
       </div>
 
