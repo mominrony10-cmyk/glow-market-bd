@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useRef } from "react";
+import React, { useRef } from "react";
 
 export default function CouponOffers() {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -25,7 +25,7 @@ export default function CouponOffers() {
       spend: "0 TK",
       disc: "FREE",
       label: "Delivery",
-      text: "New at Beauty Booth? Then Get Free delivery for your First order!"
+      text: "New at Glow Market? Then Get Free delivery for your First order!"
     },
     {
       title: "Free Gift Offer",
@@ -36,58 +36,63 @@ export default function CouponOffers() {
     }
   ];
 
-  // Smooth Auto-Scrolling Effect
-  useEffect(() => {
+  const handleScroll = (direction: "left" | "right") => {
     const container = scrollContainerRef.current;
     if (!container) return;
-
-    let direction = 1; // 1 = forward, -1 = backward
-    const scrollStep = 200; // Adjusted for super compact card width + gap
-
-    const timer = setInterval(() => {
-      const maxScrollLeft = container.scrollWidth - container.clientWidth;
-      if (maxScrollLeft <= 0) return;
-
-      let nextScrollLeft = container.scrollLeft + scrollStep * direction;
-
-      if (nextScrollLeft >= maxScrollLeft) {
-        nextScrollLeft = maxScrollLeft;
-        direction = -1; // Reverse direction at the end
-      } else if (nextScrollLeft <= 0) {
-        nextScrollLeft = 0;
-        direction = 1; // Go forward at the start
-      }
-
-      container.scrollTo({
-        left: nextScrollLeft,
-        behavior: "smooth"
-      });
-    }, 3500); // Slide every 3.5 seconds
-
-    return () => clearInterval(timer);
-  }, []);
+    const scrollAmount = 320;
+    container.scrollBy({
+      left: direction === "left" ? -scrollAmount : scrollAmount,
+      behavior: "smooth"
+    });
+  };
 
   return (
-    <section className="max-w-7xl mx-auto px-4 mt-12 select-none">
-      <div className="pb-1 mb-6">
-        <h3 className="text-2xl font-black text-black tracking-tight uppercase">
-          Offers to Say Yes
-        </h3>
+    <section className="max-w-7xl mx-auto px-4 mt-12 select-none relative group/nav">
+      <div className="flex flex-col sm:flex-row sm:items-end justify-between border-b border-zinc-100 pb-3 mb-6">
+        <div>
+          <h3 className="text-xl sm:text-2xl font-black text-gray-900 tracking-tight uppercase">
+            Offers to Say Yes
+          </h3>
+          <p className="text-xs text-zinc-400 font-medium mt-0.5">
+            Grab exclusive coupons & free gifts on your purchase
+          </p>
+        </div>
+
+        {/* Desktop Slide Controls */}
+        <div className="hidden sm:flex items-center gap-2 mt-3 sm:mt-0">
+          <button
+            onClick={() => handleScroll("left")}
+            className="w-8 h-8 rounded-full border border-zinc-200 hover:border-zinc-300 bg-white flex items-center justify-center text-zinc-600 transition-colors shadow-xs hover:shadow-sm cursor-pointer"
+            aria-label="Scroll left"
+          >
+            ←
+          </button>
+          <button
+            onClick={() => handleScroll("right")}
+            className="w-8 h-8 rounded-full border border-zinc-200 hover:border-zinc-300 bg-white flex items-center justify-center text-zinc-600 transition-colors shadow-xs hover:shadow-sm cursor-pointer"
+            aria-label="Scroll right"
+          >
+            →
+          </button>
+        </div>
       </div>
 
+      {/* Horizontal Carousel */}
       <div 
         ref={scrollContainerRef}
-        className="overflow-x-auto no-scrollbar flex gap-4 pb-4 scroll-smooth"
+        className="overflow-x-auto no-scrollbar flex gap-4 pb-4 scroll-smooth snap-x snap-mandatory"
       >
         {coupons.map((ticket, i) => (
           <div 
             key={i} 
-            className="bg-[#FFFDF9] border border-[#FFE3C3] rounded-2xl flex items-center min-w-[220px] md:min-w-[240px] h-[115px] overflow-hidden shadow-xs relative shrink-0"
+            className="bg-gradient-to-r from-amber-50/40 to-rose-50/20 border border-amber-200/50 rounded-2xl flex items-center min-w-[280px] sm:min-w-[320px] max-w-[340px] h-[120px] overflow-hidden shadow-xs hover:shadow-md transition-shadow relative shrink-0 snap-start"
           >
             {/* Left Ticket Part */}
-            <div className="p-3 flex-1 flex flex-col justify-center h-full">
-              <span className="text-xs font-black text-gray-900 leading-tight">{ticket.title}</span>
-              <p className="text-[9.5px] text-zinc-500 font-semibold leading-normal mt-1 line-clamp-3">
+            <div className="p-4 flex-1 flex flex-col justify-center h-full text-left">
+              <span className="text-xs sm:text-[13px] font-black text-zinc-900 leading-tight uppercase tracking-tight">
+                {ticket.title}
+              </span>
+              <p className="text-[10px] sm:text-xs text-zinc-500 font-semibold leading-relaxed mt-1.5 line-clamp-3">
                 {ticket.text}
               </p>
             </div>
@@ -95,22 +100,22 @@ export default function CouponOffers() {
             {/* Dashed partition divider with notch cutouts */}
             <div className="relative h-full flex flex-col justify-between items-center w-0 shrink-0">
               {/* Top half circle notch cutout */}
-              <div className="w-3 h-3 rounded-full bg-white border border-[#FFE3C3] absolute -top-1.5 -left-1.5 z-10"></div>
+              <div className="w-4 h-4 rounded-full bg-white border border-amber-200/50 absolute -top-2 -left-2 z-10"></div>
               
               {/* Vertical dashed separator */}
-              <div className="h-full border-l-2 border-dashed border-[#FFE3C3]"></div>
+              <div className="h-full border-l-[1.5px] border-dashed border-amber-200/70"></div>
               
               {/* Bottom half circle notch cutout */}
-              <div className="w-3 h-3 rounded-full bg-white border border-[#FFE3C3] absolute -bottom-1.5 -left-1.5 z-10"></div>
+              <div className="w-4 h-4 rounded-full bg-white border border-amber-200/50 absolute -bottom-2 -left-2 z-10"></div>
             </div>
 
             {/* Right Ticket Part */}
-            <div className="p-2 w-[75px] h-full flex flex-col items-center justify-center text-center shrink-0">
-              <span className="text-[8px] font-bold text-zinc-500 block">Spend: {ticket.spend}</span>
-              <span className="text-lg font-black text-[#e11d48] block mt-0.5 tracking-tight">
+            <div className="p-3 w-[85px] sm:w-[95px] h-full flex flex-col items-center justify-center text-center shrink-0 bg-white/40">
+              <span className="text-[9px] font-bold text-zinc-400 block tracking-wide">Spend: {ticket.spend}</span>
+              <span className="text-lg sm:text-xl font-black text-[#FF1A58] block mt-0.5 tracking-tighter">
                 {ticket.disc}
               </span>
-              <span className="text-[8px] font-black text-zinc-500 uppercase tracking-wider block mt-1">
+              <span className="text-[9px] font-black text-zinc-500 uppercase tracking-widest block mt-1 scale-90">
                 {ticket.label}
               </span>
             </div>

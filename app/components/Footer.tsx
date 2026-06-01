@@ -37,7 +37,7 @@ export default function Footer() {
             </div>
             <div className="flex flex-col text-left">
               <span className="text-[11px] font-black text-gray-900 leading-tight">Need Help?</span>
-              <span className="text-[11px] font-bold text-zinc-700 mt-1 leading-tight hover:text-[#e11d48] cursor-pointer">+8801643007383</span>
+              <span className="text-[11px] font-bold text-zinc-700 mt-1 leading-tight hover:text-[#e11d48] cursor-pointer">+8801952190142</span>
               <span className="text-[11px] font-bold text-zinc-700 mt-0.5 leading-tight hover:text-[#e11d48] cursor-pointer">+8809613241084</span>
             </div>
           </div>
@@ -57,7 +57,7 @@ export default function Footer() {
           {/* Helpline details */}
           <div className="flex flex-col gap-2 select-text">
             <h5 className="text-base font-extrabold text-zinc-950 block tracking-tight">Need Help?</h5>
-            <span className="text-sm font-bold text-zinc-800 block hover:text-[#e11d48] transition-colors cursor-pointer">+8801643007383</span>
+            <span className="text-sm font-bold text-zinc-800 block hover:text-[#e11d48] transition-colors cursor-pointer">+8801952190142</span>
             <span className="text-sm font-bold text-zinc-800 block hover:text-[#e11d48] transition-colors cursor-pointer">+8809613241084</span>
           </div>
         </div>

@@ -1,9 +1,11 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useApp } from "../../context/AppContext";
 
 export default function BestOfferBrands() {
-  const { setSearchQuery, setToastMessage } = useApp();
+  const router = useRouter();
+  const { setToastMessage } = useApp();
 
   const brands = [
     { name: "COSRX", rate: "Up to 44% Off", desc: "K-Beauty Must Have", bg: "https://cms.beautybooth.com.bd/uploads/cms-migrate/up-to-44-off-web-1768387016.webp" },
@@ -26,8 +28,7 @@ export default function BestOfferBrands() {
           <div 
             key={i}
             onClick={() => {
-              setSearchQuery(br.name);
-              setToastMessage(`Viewing ${br.name} items.`);
+              router.push(`/products?brand=${encodeURIComponent(br.name)}`);
             }}
             className="flex flex-col group cursor-pointer"
           >

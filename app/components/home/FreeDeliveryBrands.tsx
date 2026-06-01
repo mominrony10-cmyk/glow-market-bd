@@ -1,9 +1,11 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useApp } from "../../context/AppContext";
 
 export default function FreeDeliveryBrands() {
-  const { setSearchQuery, setToastMessage } = useApp();
+  const router = useRouter();
+  const { setToastMessage } = useApp();
 
   const brands = [
     { 
@@ -56,8 +58,7 @@ export default function FreeDeliveryBrands() {
           <div 
             key={i}
             onClick={() => {
-              setSearchQuery(br.name);
-              setToastMessage(`Viewing free shipping deals on ${br.name}.`);
+              router.push(`/products?brand=${encodeURIComponent(br.name)}`);
             }}
             className="flex flex-col group cursor-pointer"
           >

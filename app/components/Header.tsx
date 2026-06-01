@@ -11,7 +11,7 @@ import {
   Camera01Icon,
 } from "@hugeicons/core-free-icons";
 import { useApp } from "../context/AppContext";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 
 export default function Header() {
   const {
@@ -24,6 +24,7 @@ export default function Header() {
   } = useApp();
 
   const pathname = usePathname();
+  const router = useRouter();
   const isAdminOrDashboard = pathname?.startsWith("/admin") || pathname?.startsWith("/dashboard");
 
   if (isAdminOrDashboard) {
@@ -47,7 +48,7 @@ export default function Header() {
           <div className="shrink-0 flex items-center">
             {/* Mobile View WhatsApp Button */}
             <a
-              href="https://api.whatsapp.com/send?phone=8801643007383"
+              href="https://api.whatsapp.com/send?phone=8801952190142"
               target="_blank"
               rel="noopener noreferrer"
               className="flex md:hidden items-center gap-1 bg-white text-gray-900 px-3 py-1 rounded-full shadow-xs transition-all duration-300 hover:scale-105 active:scale-95"
@@ -58,7 +59,7 @@ export default function Header() {
 
             {/* Desktop View WhatsApp Button */}
             <a
-              href="https://api.whatsapp.com/send?phone=8801643007383"
+              href="https://api.whatsapp.com/send?phone=8801952190142"
               target="_blank"
               rel="noopener noreferrer"
               className="hidden md:flex items-center gap-1.5 bg-white text-gray-900 px-4.5 py-1.5 rounded-full shadow-md transition-all duration-300 hover:scale-105 active:scale-95"
@@ -108,6 +109,11 @@ export default function Header() {
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    router.push(`/products?q=${searchQuery}`);
+                  }
+                }}
                 placeholder="What are you looking for?"
                 className="w-full bg-transparent border-none outline-none text-sm text-gray-800 placeholder-zinc-400 font-medium"
               />
@@ -125,7 +131,7 @@ export default function Header() {
 
               {/* Pink Magnifier search trigger */}
               <button 
-                onClick={() => setToastMessage(`Searching for "${searchQuery || 'skincare Bestsellers'}"`)}
+                onClick={() => router.push(`/products?q=${searchQuery}`)}
                 className="w-9 h-9 rounded-full bg-[#FF1A58] hover:bg-[#be185d] text-white flex items-center justify-center transition-all duration-300 shadow shrink-0 cursor-pointer"
               >
                 <HugeiconsIcon icon={Search01Icon} size={16} />
@@ -201,26 +207,38 @@ export default function Header() {
             {/* Pill Categories matching mobile view exactly */}
             <div className="flex items-center gap-2 shrink-0">
               <button
-                onClick={() => setToastMessage("Active Deals Filtered!")}
-                className="flex items-center bg-white border border-zinc-200 text-gray-900 px-4 py-2 rounded-full text-xs font-bold transition-all cursor-pointer whitespace-nowrap"
+                onClick={() => {
+                  router.push("/products");
+                  setToastMessage("Flash Friday Deals active!");
+                }}
+                className="flex items-center bg-white border border-zinc-200 text-gray-900 px-4 py-2 rounded-full text-xs font-bold transition-all cursor-pointer whitespace-nowrap hover:border-[#FF1A58]"
               >
                 <span>Flash Friday</span>
               </button>
               <button
-                onClick={() => setToastMessage("Summer Sale 2026 loaded!")}
-                className="flex items-center bg-white border border-zinc-200 text-gray-900 px-4 py-2 rounded-full text-xs font-bold transition-all cursor-pointer whitespace-nowrap"
+                onClick={() => {
+                  router.push("/products");
+                  setToastMessage("Summer Sale 2026 active!");
+                }}
+                className="flex items-center bg-white border border-zinc-200 text-gray-900 px-4 py-2 rounded-full text-xs font-bold transition-all cursor-pointer whitespace-nowrap hover:border-[#FF1A58]"
               >
                 <span>Summer Sale 2026</span>
               </button>
               <button
-                onClick={() => setToastMessage("Beauty Week specials!")}
-                className="flex items-center bg-white border border-zinc-200 text-gray-900 px-4 py-2 rounded-full text-xs font-bold transition-all cursor-pointer whitespace-nowrap"
+                onClick={() => {
+                  router.push("/products");
+                  setToastMessage("Beauty Week specials active!");
+                }}
+                className="flex items-center bg-white border border-zinc-200 text-gray-900 px-4 py-2 rounded-full text-xs font-bold transition-all cursor-pointer whitespace-nowrap hover:border-[#FF1A58]"
               >
                 <span>Beauty Week</span>
               </button>
               <button
-                onClick={() => setToastMessage("Hair Care campaign loaded.")}
-                className="flex items-center bg-white border border-zinc-200 text-gray-900 px-4 py-2 rounded-full text-xs font-bold transition-all cursor-pointer whitespace-nowrap"
+                onClick={() => {
+                  router.push("/products?category=Hair Care");
+                  setToastMessage("Hair Care campaign loaded!");
+                }}
+                className="flex items-center bg-white border border-zinc-200 text-gray-900 px-4 py-2 rounded-full text-xs font-bold transition-all cursor-pointer whitespace-nowrap hover:border-[#FF1A58]"
               >
                 <span>Hair Care</span>
               </button>
@@ -228,11 +246,11 @@ export default function Header() {
             
             {/* Fallback details for desktop navigation */}
             <div className="hidden md:flex items-center gap-4 text-sm font-semibold text-zinc-700 shrink-0 border-l border-zinc-200 pl-4 ml-2">
-              <button onClick={() => { useApp().setActiveBoishakhiTab("Serum"); setToastMessage("Skin care products listed!"); }} className="hover:text-[#e11d48] cursor-pointer">Skin Care</button>
-              <button onClick={() => { useApp().setActiveBoishakhiTab("Makeup"); setToastMessage("Makeup products listed!"); }} className="hover:text-[#e11d48] cursor-pointer">Make Up</button>
-              <button onClick={() => setToastMessage("Hair care oils and shampoos loaded.")} className="hover:text-[#e11d48] cursor-pointer">Hair Care</button>
-              <button onClick={() => setToastMessage("Body lotions, sprays, and scrubs loaded.")} className="hover:text-[#e11d48] cursor-pointer">Bath & Body Care</button>
-              <button onClick={() => setToastMessage("BOGO 1+1 Special Campaign activated!")} className="text-[#e11d48] hover:underline cursor-pointer">Bogo</button>
+              <button onClick={() => router.push("/products?category=Skin Care")} className="hover:text-[#e11d48] cursor-pointer">Skin Care</button>
+              <button onClick={() => router.push("/products?category=Makeup")} className="hover:text-[#e11d48] cursor-pointer">Make Up</button>
+              <button onClick={() => router.push("/products?category=Hair Care")} className="hover:text-[#e11d48] cursor-pointer">Hair Care</button>
+              <button onClick={() => router.push("/products?category=Bath & Body")} className="hover:text-[#e11d48] cursor-pointer">Bath & Body Care</button>
+              <button onClick={() => router.push("/products?category=Accessories")} className="text-[#e11d48] hover:underline cursor-pointer">Accessories</button>
             </div>
 
           </div>

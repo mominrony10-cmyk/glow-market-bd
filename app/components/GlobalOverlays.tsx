@@ -13,6 +13,7 @@ import {
   ArrowUp02Icon,
 } from "@hugeicons/core-free-icons";
 import { useApp } from "../context/AppContext";
+import { useRouter, usePathname } from "next/navigation";
 
 export default function GlobalOverlays() {
   const {
@@ -29,6 +30,9 @@ export default function GlobalOverlays() {
     showQuickView,
     setShowQuickView,
   } = useApp();
+
+  const router = useRouter();
+  const pathname = usePathname();
 
   const [showScrollTop, setShowScrollTop] = useState(false);
 
@@ -49,7 +53,7 @@ export default function GlobalOverlays() {
     <>
       {/* 1. Floating WhatsApp button */}
       <a
-        href="https://api.whatsapp.com/send?phone=8801643007383"
+        href="https://api.whatsapp.com/send?phone=8801952190142"
         target="_blank"
         rel="noopener noreferrer"
         className="fixed md:bottom-6 bottom-20 right-6 z-40 bg-[#25D366] hover:bg-[#20ba59] text-white w-14 h-14 rounded-full flex items-center justify-center shadow-2xl transition-all hover:scale-110 active:scale-95 group"
@@ -197,28 +201,28 @@ export default function GlobalOverlays() {
       )}
       {/* SECTOR 28: RESPONSIVE BOTTOM STICKY TAB NAVIGATION BAR FOR MOBILE */}
       <div className="fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-zinc-100 flex items-center justify-around py-1.5 shadow-[0_-2px_10px_rgba(0,0,0,0.05)] md:hidden select-none">
-        {/* Home Tab (Active) */}
+        
+        {/* Home Tab */}
         <button
-          onClick={() => { window.scrollTo({ top: 0, behavior: "smooth" }); setToastMessage("Already on Home page"); }}
+          onClick={() => { router.push("/"); setToastMessage("Going to Home page"); }}
           className="flex flex-col items-center gap-0.5 flex-1 relative py-1"
         >
-          {/* Active bar accent at the top of the tab */}
-          <div className="absolute top-0 w-8 h-1 bg-[#FF1A58] rounded-full" />
-          <HugeiconsIcon icon={Home01Icon} size={20} className="text-[#FF1A58]" />
-          <span className="text-[10px] font-black text-gray-900">Home</span>
+          {pathname === "/" && <div className="absolute top-0 w-8 h-1 bg-[#FF1A58] rounded-full" />}
+          <HugeiconsIcon icon={Home01Icon} size={20} className={pathname === "/" ? "text-[#FF1A58]" : "text-zinc-400 hover:text-[#FF1A58]"} />
+          <span className={`text-[10px] ${pathname === "/" ? "font-black text-gray-900" : "font-bold text-zinc-400"}`}>Home</span>
         </button>
 
         {/* Category Tab */}
         <button
           onClick={() => {
-            const el = document.getElementById("our-brands") || document.getElementById("boishakhi-campaign");
-            el?.scrollIntoView({ behavior: "smooth" });
+            router.push("/categories");
             setToastMessage("Browsing all categories...");
           }}
-          className="flex flex-col items-center gap-0.5 flex-1 py-1"
+          className="flex flex-col items-center gap-0.5 flex-1 relative py-1"
         >
-          <HugeiconsIcon icon={GridIcon} size={20} className="text-zinc-400 hover:text-zinc-600" />
-          <span className="text-[10px] font-bold text-zinc-400">Category</span>
+          {pathname === "/categories" && <div className="absolute top-0 w-8 h-1 bg-[#FF1A58] rounded-full" />}
+          <HugeiconsIcon icon={GridIcon} size={20} className={pathname === "/categories" ? "text-[#FF1A58]" : "text-zinc-400 hover:text-[#FF1A58]"} />
+          <span className={`text-[10px] ${pathname === "/categories" ? "font-black text-gray-900" : "font-bold text-zinc-400"}`}>Category</span>
         </button>
 
         {/* Free Gift Tab */}
@@ -240,7 +244,7 @@ export default function GlobalOverlays() {
 
         {/* Chat Tab */}
         <a
-          href="https://api.whatsapp.com/send?phone=8801643007383"
+          href="https://api.whatsapp.com/send?phone=8801952190142"
           target="_blank"
           rel="noopener noreferrer"
           className="flex flex-col items-center gap-0.5 flex-1 py-1"

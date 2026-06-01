@@ -1,9 +1,10 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useApp } from "../../context/AppContext";
 
 export default function Top3Beauty() {
-  const { setSearchQuery, setToastMessage } = useApp();
+  const router = useRouter();
 
   const items = [
     { label: "Face", imgUrl: "https://cms.beautybooth.com.bd/uploads/beauty/face-web-1766999341.webp" },
@@ -18,7 +19,9 @@ export default function Top3Beauty() {
           Top 3 of Beauty
         </h3>
         <button 
-          onClick={() => setToastMessage("Exploring Trending collections...")} 
+          onClick={() => {
+            router.push("/products?category=Makeup");
+          }} 
           className="text-xs font-bold border border-zinc-200 bg-zinc-50 hover:bg-zinc-100 px-4 py-1.5 rounded-full text-zinc-700 cursor-pointer"
         >
           See All →
@@ -30,8 +33,7 @@ export default function Top3Beauty() {
           <button 
             key={i} 
             onClick={() => {
-              setSearchQuery(item.label);
-              setToastMessage(`Viewing products for: ${item.label}`);
+              router.push(`/products?q=${encodeURIComponent(item.label)}`);
             }}
             className="flex flex-col items-center gap-3.5 text-center group cursor-pointer focus:outline-none"
           >

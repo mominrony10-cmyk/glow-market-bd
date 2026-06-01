@@ -109,6 +109,47 @@ export default function FeaturedVideos() {
   const [transitionEnabled, setTransitionEnabled] = useState(true);
   const [isMuted, setIsMuted] = useState(true);
   const [isHovered, setIsHovered] = useState(false);
+  const [windowWidth, setWindowWidth] = useState<number | null>(null);
+
+  // Swipe gesture detection states
+  const [touchStart, setTouchStart] = useState<number | null>(null);
+  const [touchEnd, setTouchEnd] = useState<number | null>(null);
+  const minSwipeDistance = 50;
+
+  // SSR-Safe Window Width Tracker & Resize Listener
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      setWindowWidth(window.innerWidth);
+      const handleResize = () => setWindowWidth(window.innerWidth);
+      window.addEventListener("resize", handleResize);
+      return () => window.removeEventListener("resize", handleResize);
+    }
+  }, []);
+
+  // Swipe Gesture Event Handlers
+  const onTouchStart = (e: React.TouchEvent) => {
+    setTouchEnd(null);
+    setTouchStart(e.targetTouches[0].clientX);
+  };
+
+  const onTouchMove = (e: React.TouchEvent) => {
+    setTouchEnd(e.targetTouches[0].clientX);
+  };
+
+  const onTouchEnd = () => {
+    if (!touchStart || !touchEnd) return;
+    const distance = touchStart - touchEnd;
+    const isLeftSwipe = distance > minSwipeDistance;
+    const isRightSwipe = distance < -minSwipeDistance;
+    
+    if (isLeftSwipe) {
+      setActiveIndex((prev) => prev + 1);
+      setToastMessage("Loading next beauty routine...");
+    } else if (isRightSwipe) {
+      setActiveIndex((prev) => prev - 1);
+      setToastMessage("Loading previous beauty routine...");
+    }
+  };
 
   // Auto-Slide leftwards indefinitely (paused when hovered)
   useEffect(() => {
@@ -161,8 +202,17 @@ export default function FeaturedVideos() {
 
   // Center alignment offset translator
   const getTranslateX = () => {
-    const isMobile = typeof window !== "undefined" && window.innerWidth < 640;
-    const stepWidth = isMobile ? 155 : 170;
+    if (windowWidth === null) return "0px";
+    
+    let stepWidth = 170; // Desktop default
+    if (windowWidth < 480) {
+      stepWidth = 115; // Small mobile
+    } else if (windowWidth < 640) {
+      stepWidth = 135; // Regular mobile
+    } else if (windowWidth < 1024) {
+      stepWidth = 155; // Tablet
+    }
+    
     // Centers exactly relative to the middle clone starting index (L + 4)
     return `${((L + 4) - activeIndex) * stepWidth}px`;
   };
@@ -186,26 +236,29 @@ export default function FeaturedVideos() {
 
       {/* Infinite Coverflow Slider Track Container */}
       <div 
-        className="relative w-full flex justify-center items-center h-[470px] overflow-hidden rounded-3xl"
+        className="relative w-full flex justify-center items-center h-[380px] sm:h-[420px] md:h-[470px] overflow-hidden rounded-3xl"
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
+        onTouchStart={onTouchStart}
+        onTouchMove={onTouchMove}
+        onTouchEnd={onTouchEnd}
       >
         {/* Floating Left Navigation Control Arrow */}
         <button
           onClick={handlePrev}
-          className="absolute left-4 top-1/2 -translate-y-1/2 z-40 w-11 h-11 rounded-full bg-white/90 backdrop-blur-md hover:bg-[#FF1A58] border border-zinc-200/80 text-[#FF1A58] hover:text-white flex items-center justify-center shadow-lg hover:shadow-rose-500/20 hover:scale-105 active:scale-95 transition-all duration-300 cursor-pointer group"
+          className="absolute left-2 md:left-4 top-1/2 -translate-y-1/2 z-40 w-9 h-9 md:w-11 md:h-11 rounded-full bg-white/90 backdrop-blur-md hover:bg-[#FF1A58] border border-zinc-200/80 text-[#FF1A58] hover:text-white flex items-center justify-center shadow-lg hover:shadow-rose-500/20 hover:scale-105 active:scale-95 transition-all duration-300 cursor-pointer group"
           title="Previous routine"
         >
-          <HugeiconsIcon icon={ArrowLeft01Icon} size={20} className="transition-transform group-hover:-translate-x-0.5 duration-300" />
+          <HugeiconsIcon icon={ArrowLeft01Icon} size={16} className="md:size-[20px] transition-transform group-hover:-translate-x-0.5 duration-300" />
         </button>
 
         {/* Floating Right Navigation Control Arrow */}
         <button
           onClick={handleNext}
-          className="absolute right-4 top-1/2 -translate-y-1/2 z-40 w-11 h-11 rounded-full bg-white/90 backdrop-blur-md hover:bg-[#FF1A58] border border-zinc-200/80 text-[#FF1A58] hover:text-white flex items-center justify-center shadow-lg hover:shadow-rose-500/20 hover:scale-105 active:scale-95 transition-all duration-300 cursor-pointer group"
+          className="absolute right-2 md:right-4 top-1/2 -translate-y-1/2 z-40 w-9 h-9 md:w-11 md:h-11 rounded-full bg-white/90 backdrop-blur-md hover:bg-[#FF1A58] border border-zinc-200/80 text-[#FF1A58] hover:text-white flex items-center justify-center shadow-lg hover:shadow-rose-500/20 hover:scale-105 active:scale-95 transition-all duration-300 cursor-pointer group"
           title="Next routine"
         >
-          <HugeiconsIcon icon={ArrowRight01Icon} size={20} className="transition-transform group-hover:translate-x-0.5 duration-300" />
+          <HugeiconsIcon icon={ArrowRight01Icon} size={16} className="md:size-[20px] transition-transform group-hover:translate-x-0.5 duration-300" />
         </button>
 
         <div 
@@ -220,7 +273,7 @@ export default function FeaturedVideos() {
             const zIndexClass = isCenter ? "z-30" : dist === 1 ? "z-20" : dist === 2 ? "z-10" : "z-0";
             const scaleClass = isCenter ? "scale-105" : dist === 1 ? "scale-[0.88]" : dist === 2 ? "scale-[0.78]" : "scale-[0.68]";
             const opacityClass = isCenter ? "opacity-100" : dist === 1 ? "opacity-75" : dist === 2 ? "opacity-50" : "opacity-25";
-            const marginClass = isCenter ? "-mx-4 sm:-mx-6" : dist === 1 ? "-mx-8 sm:-mx-12" : "-mx-12 sm:-mx-16";
+            const marginClass = isCenter ? "-mx-3 sm:-mx-6" : dist === 1 ? "-mx-7 sm:-mx-12" : "-mx-11 sm:-mx-16";
             const activeCardBorder = isCenter ? "border-2 border-[#FF1A58] ring-4 ring-rose-500/10 shadow-2xl" : "border border-zinc-200/40";
             const blurClass = isCenter ? "blur-0" : "blur-[0.5px]";
 
@@ -233,7 +286,7 @@ export default function FeaturedVideos() {
                     setToastMessage(`Focusing on: "${video.title}"`);
                   }
                 }}
-                className={`w-[260px] md:w-[280px] h-[410px] md:h-[430px] rounded-[32px] overflow-hidden transition-all duration-500 ease-in-out relative shrink-0 flex flex-col justify-between group cursor-pointer bg-white origin-center ${zIndexClass} ${scaleClass} ${opacityClass} ${marginClass} ${activeCardBorder} ${blurClass} focus:outline-none focus:ring-0`}
+                className={`w-[210px] xs:w-[240px] md:w-[280px] h-[330px] xs:h-[370px] md:h-[430px] rounded-[24px] md:rounded-[32px] overflow-hidden transition-all duration-500 ease-in-out relative shrink-0 flex flex-col justify-between group cursor-pointer bg-white origin-center ${zIndexClass} ${scaleClass} ${opacityClass} ${marginClass} ${activeCardBorder} ${blurClass} focus:outline-none focus:ring-0`}
               >
                 {/* Background Video (Auto Play on Center) or Static Image Cover */}
                 {isCenter ? (
@@ -292,8 +345,8 @@ export default function FeaturedVideos() {
 
                 {/* Glassmorphic Creator Quote Overlay Banner (Only on active card) */}
                 {isCenter && (
-                  <div className="absolute bottom-[76px] left-4 right-4 z-10 bg-black/50 backdrop-blur-md rounded-2xl p-3 border border-white/10 shadow-lg select-none transition-all duration-300 animate-slide-up-fade">
-                    <p className="text-[10px] md:text-[10.5px] font-semibold text-white italic leading-relaxed text-center">
+                  <div className="absolute bottom-[66px] xs:bottom-[76px] left-3 right-3 xs:left-4 xs:right-4 z-10 bg-black/50 backdrop-blur-md rounded-2xl p-2.5 xs:p-3 border border-white/10 shadow-lg select-none transition-all duration-300 animate-slide-up-fade">
+                    <p className="text-[9px] xs:text-[10px] md:text-[10.5px] font-semibold text-white italic leading-relaxed text-center">
                       "{video.quote}"
                     </p>
                   </div>
@@ -301,27 +354,27 @@ export default function FeaturedVideos() {
 
                 {/* Bottom Shoppable Card Container (Only visible on center active card with slide entrance) */}
                 {isCenter ? (
-                  <div className="bg-white/95 backdrop-blur-md border-t border-zinc-100/50 px-4 py-3 flex items-center gap-3 relative z-10 w-full shrink-0 shadow-[0_-5px_20px_rgba(0,0,0,0.05)] transition-all duration-300 rounded-b-[30px] animate-slide-up-fade">
-                    <div className="w-10 h-10 rounded-lg bg-zinc-50 border border-zinc-100 flex items-center justify-center p-1 shrink-0 overflow-hidden shadow-inner">
+                  <div className="bg-white/95 backdrop-blur-md border-t border-zinc-100/50 px-2.5 xs:px-4 py-2 xs:py-3 flex items-center gap-2 xs:gap-3 relative z-10 w-full shrink-0 shadow-[0_-5px_20px_rgba(0,0,0,0.05)] transition-all duration-300 rounded-b-[22px] md:rounded-b-[30px] animate-slide-up-fade">
+                    <div className="w-8 h-8 xs:w-10 xs:h-10 rounded-lg bg-zinc-50 border border-zinc-100 flex items-center justify-center p-1 shrink-0 overflow-hidden shadow-inner">
                       <img src={video.prodImg} className="max-h-full max-w-full object-contain" alt={video.title} />
                     </div>
                     <div className="flex-1 min-w-0 flex flex-col text-left">
-                      <span className="text-[8px] font-black text-[#FF1A58] uppercase tracking-wider block">
+                      <span className="text-[7px] xs:text-[8px] font-black text-[#FF1A58] uppercase tracking-wider block">
                         {video.category}
                       </span>
-                      <h5 className="text-[10px] font-extrabold text-zinc-800 truncate leading-tight mt-0.5">
+                      <h5 className="text-[9px] xs:text-[10px] font-extrabold text-zinc-800 truncate leading-tight mt-0.5">
                         {video.title}
                       </h5>
                       <div className="flex items-center gap-1.5 mt-0.5">
-                        <span className="text-xs font-black text-black">৳{video.price}</span>
+                        <span className="text-[10px] xs:text-xs font-black text-black">৳{video.price}</span>
                         {video.oldPrice && (
-                          <span className="text-[9px] text-zinc-400 line-through font-bold">৳{video.oldPrice}</span>
+                          <span className="text-[8px] xs:text-[9px] text-zinc-400 line-through font-bold">৳{video.oldPrice}</span>
                         )}
                       </div>
                     </div>
-                    <div className="bg-[#FF1A58] hover:bg-[#e11d48] text-white font-extrabold text-[9px] px-3.5 py-1.5 rounded-full transition-all uppercase tracking-wider flex items-center gap-0.5 shadow-sm hover:shadow active:scale-95 cursor-pointer">
+                    <div className="bg-[#FF1A58] hover:bg-[#e11d48] text-white font-extrabold text-[8px] xs:text-[9px] px-2.5 py-1 xs:px-3.5 xs:py-1.5 rounded-full transition-all uppercase tracking-wider flex items-center gap-0.5 shadow-sm hover:shadow active:scale-95 cursor-pointer">
                       Shop
-                      <HugeiconsIcon icon={ArrowRight01Icon} size={10} className="stroke-[3]" />
+                      <HugeiconsIcon icon={ArrowRight01Icon} size={8} className="stroke-[3]" />
                     </div>
                   </div>
                 ) : (

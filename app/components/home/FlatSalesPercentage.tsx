@@ -1,9 +1,11 @@
 "use client";
 
 import React from "react";
+import { useRouter } from "next/navigation";
 import { useApp } from "../../context/AppContext";
 
 export default function FlatSalesPercentage() {
+  const router = useRouter();
   const { setToastMessage } = useApp();
 
   const brands = [
@@ -58,7 +60,9 @@ export default function FlatSalesPercentage() {
         {brands.map((b) => (
           <div
             key={b.id}
-            onClick={() => setToastMessage(`Navigating to ${b.name} store`)}
+            onClick={() => {
+              router.push(`/products?brand=${encodeURIComponent(b.name)}`);
+            }}
             className="flex flex-col items-center group cursor-pointer"
           >
             {/* High-Fidelity Production WebP Banner Container */}

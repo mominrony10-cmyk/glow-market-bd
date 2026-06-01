@@ -1,9 +1,11 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useApp } from "../../context/AppContext";
 
 export default function BestOfSkincare() {
-  const { setActiveBoishakhiTab, setToastMessage } = useApp();
+  const router = useRouter();
+  const { setToastMessage } = useApp();
 
   const steps = [
     { name: "Cleanser", imgUrl: "https://cms.beautybooth.com.bd/uploads/cms-migrate/cleanser-web-1766999433.webp" },
@@ -18,7 +20,9 @@ export default function BestOfSkincare() {
           Best of Skincare
         </h3>
         <button 
-          onClick={() => setToastMessage("Loading Skincare Catalog...")} 
+          onClick={() => {
+            router.push("/products?category=Skin Care");
+          }} 
           className="text-xs font-bold border border-zinc-200 bg-zinc-50 hover:bg-zinc-100 px-4 py-1.5 rounded-full text-zinc-700 cursor-pointer"
         >
           See All →
@@ -30,8 +34,13 @@ export default function BestOfSkincare() {
           <button 
             key={i} 
             onClick={() => {
-              setActiveBoishakhiTab(step.name === "Cleanser" ? "Cleansers" : step.name === "Sunscreen" ? "Sun Protection" : "Serum");
-              setToastMessage(`Active skincare filter: ${step.name}`);
+              const categoryQuery = step.name === "Cleanser" 
+                ? "Cleansers" 
+                : step.name === "Sunscreen" 
+                  ? "Sun Protection" 
+                  : "Serums & Treatments";
+              
+              router.push(`/products?category=${encodeURIComponent(categoryQuery)}`);
             }}
             className="flex flex-col items-center gap-3.5 text-center group cursor-pointer focus:outline-none"
           >

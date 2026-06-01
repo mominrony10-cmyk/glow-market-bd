@@ -1,9 +1,11 @@
 "use client";
 
 import { useApp } from "../../context/AppContext";
+import { useRouter } from "next/navigation";
 
 export default function TopCategories() {
-  const { setActiveBoishakhiTab, setToastMessage } = useApp();
+  const { setToastMessage } = useApp();
+  const router = useRouter();
 
   const categories = [
     { name: "Skincare", label: "Skincare", imgUrl: "https://cms.beautybooth.com.bd/uploads/cms-migrate/skincare-web-1766999117.webp" },
@@ -21,7 +23,10 @@ export default function TopCategories() {
           Top Categories
         </h3>
         <button 
-          onClick={() => setToastMessage("Opening all categories catalogue.")}
+          onClick={() => {
+            router.push("/categories");
+            setToastMessage("Opening All Categories catalog...");
+          }}
           className="border border-zinc-200 hover:border-zinc-300 px-4 py-1.5 rounded-full text-xs font-semibold text-gray-700 transition-colors flex items-center gap-1 bg-white cursor-pointer"
         >
           <span>See All</span>
@@ -34,9 +39,8 @@ export default function TopCategories() {
           <button
             key={idx}
             onClick={() => {
-              if (cat.name === "Skincare") {
-                setActiveBoishakhiTab("Serum");
-              }
+              const routeCat = cat.name === "Skincare" ? "Skin Care" : cat.name;
+              router.push(`/products?category=${routeCat}`);
               setToastMessage(`Switched Category to: ${cat.label}`);
             }}
             className="flex flex-col items-center gap-2 group cursor-pointer shrink-0 min-w-[90px] md:min-w-0"
