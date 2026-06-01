@@ -151,7 +151,7 @@ export default function Header() {
 
             {/* User Profile - desktop only */}
             <button 
-              onClick={() => setToastMessage("Opening Customer Login Dashboard...")}
+              onClick={() => router.push("/account")}
               className="hidden md:flex w-10 h-10 rounded-full hover:bg-zinc-100 items-center justify-center text-zinc-700 transition-colors"
             >
               <HugeiconsIcon icon={UserIcon} size={20} />

@@ -1,12 +1,22 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useApp } from "../context/AppContext";
 import { useRouter } from "next/navigation";
 
 export default function AccountPage() {
   const { wishlist, cartCount } = useApp();
   const router = useRouter();
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const isLoggedIn = localStorage.getItem("isLoggedIn");
+    if (isLoggedIn !== "true") {
+      router.push("/login");
+    } else {
+      setLoading(false);
+    }
+  }, [router]);
 
   // Mock Profile Info
   const [profile, setProfile] = useState({
@@ -48,6 +58,17 @@ export default function AccountPage() {
       setVouchers(prev => prev.map((v, i) => i === index ? { ...v, copied: false } : v));
     }, 2000);
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-zinc-50 flex items-center justify-center">
+        <div className="flex flex-col items-center gap-3">
+          <div className="w-10 h-10 border-4 border-[#FF1A58] border-t-transparent rounded-full animate-spin" />
+          <span className="text-xs font-black uppercase text-zinc-400 tracking-wider">Verifying Access...</span>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-zinc-50/50 pb-24 select-none">
@@ -294,7 +315,10 @@ export default function AccountPage() {
 
             {/* Logout button */}
             <button 
-              onClick={() => router.push("/")}
+              onClick={() => {
+                localStorage.removeItem("isLoggedIn");
+                router.push("/");
+              }}
               className="w-full bg-white hover:bg-zinc-100 text-zinc-600 font-extrabold text-xs uppercase py-3.5 rounded-2xl border border-zinc-200 transition-colors shadow-xs cursor-pointer text-center"
             >
               Sign Out Account
