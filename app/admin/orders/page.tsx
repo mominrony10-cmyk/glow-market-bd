@@ -250,7 +250,7 @@ export default function AdminOrdersPage() {
                 <div className="flex flex-col gap-1">
                   <span className="font-extrabold text-zinc-900 text-base">Glow Market BD</span>
                   <span className="text-[11px] font-semibold text-zinc-500 leading-normal max-w-[200px]">
-                    Ujjwal Tower, House no. 362, East Rampura, Dhaka 1219
+                    Faridpur sadar, Faridpur
                   </span>
                 </div>
                 <div className="flex flex-col items-end gap-0.5 text-right">

@@ -39,7 +39,7 @@ export default function VisitOutlet() {
           <div className="relative w-full h-[380px] sm:h-[420px] rounded-3xl overflow-hidden border border-zinc-200/80 shadow-md bg-zinc-100 group">
             {/* The Interactive Google Map */}
             <iframe
-              title="Beauty Booth Rampura Bangladesh Showroom Location"
+              title="Beauty Booth Faridpur Bangladesh Showroom Location"
               src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3651.8804000492856!2d90.42223847602283!3d23.751609588724772!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3755b866c1f1ec71%3A0xc07bc77f240edc3!2sBeauty%20Booth%20Bangladesh!5e0!3m2!1sen!2sbd!4v1716568000000!5m2!1sen!2sbd"
               className="w-full h-full border-0 grayscale-[20%] hover:grayscale-0 transition-all duration-700"
               allowFullScreen={true}
@@ -54,7 +54,7 @@ export default function VisitOutlet() {
                     Beauty Booth Bangladesh
                   </h4>
                   <p className="text-[11px] text-zinc-500 mt-1 leading-normal font-medium">
-                    Ujjwal Tower, House no. 362, 2nd Floor East Rampura, ডি আই টি সড়ক, ঢাকা 1219
+                    Faridpur sadar, Faridpur
                   </p>
                   <div className="flex items-center gap-1 mt-1.5">
                     <span className="text-[11px] font-bold text-zinc-700">4.7</span>

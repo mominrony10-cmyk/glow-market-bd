@@ -38,7 +38,7 @@ export default function Footer() {
             <div className="flex flex-col text-left">
               <span className="text-[11px] font-black text-gray-900 leading-tight">Need Help?</span>
               <span className="text-[11px] font-bold text-zinc-700 mt-1 leading-tight hover:text-[#e11d48] cursor-pointer">+8801952190142</span>
-              <span className="text-[11px] font-bold text-zinc-700 mt-0.5 leading-tight hover:text-[#e11d48] cursor-pointer">+8809613241084</span>
+              <span className="text-[11px] font-bold text-zinc-700 mt-0.5 leading-tight hover:text-[#e11d48] cursor-pointer">+8801604629866</span>
             </div>
           </div>
         </div>
@@ -58,7 +58,7 @@ export default function Footer() {
           <div className="flex flex-col gap-2 select-text">
             <h5 className="text-base font-extrabold text-zinc-950 block tracking-tight">Need Help?</h5>
             <span className="text-sm font-bold text-zinc-800 block hover:text-[#e11d48] transition-colors cursor-pointer">+8801952190142</span>
-            <span className="text-sm font-bold text-zinc-800 block hover:text-[#e11d48] transition-colors cursor-pointer">+8809613241084</span>
+            <span className="text-sm font-bold text-zinc-800 block hover:text-[#e11d48] transition-colors cursor-pointer">+8801604629866</span>
           </div>
         </div>
 
@@ -252,7 +252,7 @@ export default function Footer() {
             </svg>
             <span className="text-zinc-950 font-extrabold text-sm block">Address:</span>
             <span className="text-zinc-500 font-semibold text-xs leading-relaxed max-w-[280px] sm:max-w-md">
-              Ujjwal Tower, House no. 362, 3rd Floor East Rampura, DIT Rd, Dhaka 1219
+              Faridpur sadar, Faridpur
             </span>
           </div>
           <div className="text-zinc-400 font-semibold text-xs pt-2">
