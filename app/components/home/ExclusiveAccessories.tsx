@@ -1,8 +1,10 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useApp } from "../../context/AppContext";
 
 export default function ExclusiveAccessories() {
+  const router = useRouter();
   const { setToastMessage } = useApp();
 
   const accessories = [
@@ -23,7 +25,7 @@ export default function ExclusiveAccessories() {
         {accessories.map((acc, i) => (
           <div 
             key={i} 
-            onClick={() => setToastMessage(`Selected: ${acc.title}`)}
+            onClick={() => router.push("/products?category=Accessories")}
             className="rounded-2xl border border-zinc-200 overflow-hidden h-[180px] shadow-sm hover:shadow transition-shadow relative group cursor-pointer"
           >
             <img src={acc.bg} className="w-full h-full object-cover group-hover:scale-102 transition-transform duration-500" alt={acc.title} />

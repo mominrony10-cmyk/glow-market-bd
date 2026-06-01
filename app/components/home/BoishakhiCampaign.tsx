@@ -26,7 +26,9 @@ export default function BoishakhiCampaign() {
           BOISHAKHI OFFER
         </h3>
         <button
-          onClick={() => setToastMessage("Loading all campaign listings...")}
+          onClick={() => {
+            router.push("/products");
+          }}
           className="text-xs font-bold border border-zinc-200 bg-zinc-50 hover:bg-zinc-100 px-4 py-1.5 rounded-full text-zinc-700 shrink-0 cursor-pointer"
         >
           See All →
@@ -40,7 +42,6 @@ export default function BoishakhiCampaign() {
             key={tab}
             onClick={() => {
               setActiveBoishakhiTab(tab);
-              setToastMessage(`Boishakhi offer changed to: ${tab}`);
             }}
             className={`px-5 py-1.5 rounded-full text-xs font-semibold border transition-all shrink-0 cursor-pointer ${activeBoishakhiTab === tab
                 ? "bg-[#310062] text-white border-[#310062]"

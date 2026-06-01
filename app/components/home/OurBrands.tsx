@@ -1,9 +1,10 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useApp } from "../../context/AppContext";
 
 export default function OurBrands() {
-  const { setSearchQuery, setToastMessage } = useApp();
+  const router = useRouter();
 
   const brands = ["COSRX", "SKIN1004", "ANUA", "BEAUTY OF JOSEON", "DOT & KEY", "ABIB", "VT COSMETICS", "CARE:NEL", "JUMISO", "3W CLINIC"];
 
@@ -13,7 +14,7 @@ export default function OurBrands() {
         <h3 className="text-lg font-black text-black tracking-wider uppercase">
           Our Brands
         </h3>
-        <button onClick={() => setToastMessage("Opening all brands database.")} className="text-xs font-bold border border-zinc-200 bg-zinc-50 hover:bg-zinc-100 px-4 py-1.5 rounded-full text-zinc-700 cursor-pointer">see all →</button>
+        <button onClick={() => router.push("/products")} className="text-xs font-bold border border-zinc-200 bg-zinc-50 hover:bg-zinc-100 px-4 py-1.5 rounded-full text-zinc-700 cursor-pointer">see all →</button>
       </div>
 
       <div className="overflow-x-auto no-scrollbar flex gap-6 py-2 items-center">
@@ -21,8 +22,7 @@ export default function OurBrands() {
           <button
             key={i}
             onClick={() => {
-              setSearchQuery(brand);
-              setToastMessage(`Selected Brand: ${brand}`);
+              router.push(`/products?brand=${encodeURIComponent(brand)}`);
             }}
             className="bg-[#FAF9F6] border border-zinc-200 px-6 py-3 rounded-xl shadow-sm text-xs font-black text-gray-700 whitespace-nowrap hover:text-[#e11d48] hover:border-rose-200 hover:-translate-y-0.5 transition-all cursor-pointer"
           >

@@ -25,7 +25,6 @@ export default function TopCategories() {
         <button 
           onClick={() => {
             router.push("/categories");
-            setToastMessage("Opening All Categories catalog...");
           }}
           className="border border-zinc-200 hover:border-zinc-300 px-4 py-1.5 rounded-full text-xs font-semibold text-gray-700 transition-colors flex items-center gap-1 bg-white cursor-pointer"
         >
@@ -41,7 +40,6 @@ export default function TopCategories() {
             onClick={() => {
               const routeCat = cat.name === "Skincare" ? "Skin Care" : cat.name;
               router.push(`/products?category=${routeCat}`);
-              setToastMessage(`Switched Category to: ${cat.label}`);
             }}
             className="flex flex-col items-center gap-2 group cursor-pointer shrink-0 min-w-[90px] md:min-w-0"
           >

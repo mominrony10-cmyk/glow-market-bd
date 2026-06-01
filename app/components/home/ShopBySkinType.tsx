@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import { useRouter } from "next/navigation";
 import { useApp } from "../../context/AppContext";
 
 interface SkinProduct {
@@ -15,7 +16,8 @@ interface SkinProduct {
 
 export default function ShopBySkinType() {
   const [activeTab, setActiveTab] = useState("Oily");
-  const { addToCart, setToastMessage } = useApp();
+  const router = useRouter();
+  const { addToCart } = useApp();
 
   const productsByTab: Record<string, SkinProduct[]> = {
     Oily: [
@@ -266,7 +268,6 @@ export default function ShopBySkinType() {
                 key={tab}
                 onClick={() => {
                   setActiveTab(tab);
-                  setToastMessage(`Switched to: ${tab} skin type`);
                 }}
                 className={`px-6 py-2 rounded-full text-xs font-black transition-all shrink-0 cursor-pointer border ${
                   isActive
@@ -287,7 +288,7 @@ export default function ShopBySkinType() {
           {activeProducts.map((p) => (
             <div
               key={p.id}
-              onClick={() => setToastMessage(`Quick viewing ${p.name}`)}
+              onClick={() => router.push(`/products?skinType=${encodeURIComponent(activeTab)}`)}
               className="bg-white rounded-[28px] p-5 md:p-5.5 flex flex-col justify-between shadow-xs hover:shadow-md transition-shadow group relative cursor-pointer border border-zinc-50"
             >
               {/* Hot Pink On Sale Pill Badge */}
@@ -344,7 +345,11 @@ export default function ShopBySkinType() {
 
         {/* Circular Floating Next Navigation Button */}
         <div 
-          onClick={() => setToastMessage("Browsing next skin type products")}
+          onClick={() => {
+            const tabs = ["Oily", "Dry", "Combination", "Normal", "Sensitive"];
+            const nextIdx = (tabs.indexOf(activeTab) + 1) % tabs.length;
+            setActiveTab(tabs[nextIdx]);
+          }}
           className="absolute -right-4 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-white shadow-md border border-zinc-100 flex items-center justify-center text-zinc-700 hover:bg-zinc-50 z-20 cursor-pointer transition-transform hover:scale-105"
         >
           <svg className="w-4.5 h-4.5 text-zinc-800" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">

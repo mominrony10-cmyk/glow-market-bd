@@ -204,7 +204,7 @@ export default function GlobalOverlays() {
         
         {/* Home Tab */}
         <button
-          onClick={() => { router.push("/"); setToastMessage("Going to Home page"); }}
+          onClick={() => { router.push("/"); }}
           className="flex flex-col items-center gap-0.5 flex-1 relative py-1"
         >
           {pathname === "/" && <div className="absolute top-0 w-8 h-1 bg-[#FF1A58] rounded-full" />}
@@ -216,7 +216,6 @@ export default function GlobalOverlays() {
         <button
           onClick={() => {
             router.push("/categories");
-            setToastMessage("Browsing all categories...");
           }}
           className="flex flex-col items-center gap-0.5 flex-1 relative py-1"
         >
@@ -234,7 +233,6 @@ export default function GlobalOverlays() {
             } else {
               window.scrollTo({ top: 1200, behavior: "smooth" });
             }
-            setToastMessage("Checking eligible gift vouchers!");
           }}
           className="flex flex-col items-center gap-0.5 flex-1 py-1"
         >
@@ -255,7 +253,7 @@ export default function GlobalOverlays() {
 
         {/* Account Tab */}
         <button
-          onClick={() => setToastMessage("Opening Customer Account Dashboard...")}
+          onClick={() => {}}
           className="flex flex-col items-center gap-0.5 flex-1 py-1"
         >
           <HugeiconsIcon icon={UserIcon} size={20} className="text-zinc-400 hover:text-zinc-600" />

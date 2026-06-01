@@ -1,10 +1,12 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useApp } from "../../context/AppContext";
 import { PRODUCTS_DATA } from "../../data/products";
 
 export default function BogoCampaign() {
-  const { addToCart, setShowQuickView, setToastMessage } = useApp();
+  const router = useRouter();
+  const { addToCart, setShowQuickView } = useApp();
 
   const bogoProducts = PRODUCTS_DATA.filter((p) => p.isBogo);
 
@@ -14,7 +16,7 @@ export default function BogoCampaign() {
         <h3 className="text-lg font-black text-black tracking-wider uppercase">
           Buy One Get One
         </h3>
-        <button onClick={() => setToastMessage("Opening Bogo Inventory...")} className="text-xs font-bold border border-zinc-200 bg-zinc-50 hover:bg-zinc-100 px-4 py-1.5 rounded-full text-zinc-700 cursor-pointer">See All →</button>
+        <button onClick={() => router.push("/products")} className="text-xs font-bold border border-zinc-200 bg-zinc-50 hover:bg-zinc-100 px-4 py-1.5 rounded-full text-zinc-700 cursor-pointer">See All →</button>
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6">
