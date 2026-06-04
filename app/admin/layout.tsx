@@ -11,6 +11,7 @@ import {
   UserIcon,
   GiftIcon,
   ArrowRight01Icon,
+  Database01Icon,
 } from "@hugeicons/core-free-icons";
 
 export default function AdminLayout({
@@ -38,6 +39,7 @@ export default function AdminLayout({
     { name: "Orders", path: "/admin/orders", icon: ShoppingBag01Icon },
     { name: "Customers", path: "/admin/customers", icon: UserIcon },
     { name: "Campaigns", path: "/admin/campaigns", icon: GiftIcon },
+    { name: "Database", path: "/admin/database", icon: Database01Icon },
   ];
 
   return (

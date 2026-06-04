@@ -1,6 +1,8 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useApp } from "../../context/AppContext";
+import { supabase } from "../../lib/supabase";
 
 interface OrderItem {
   name: string;
@@ -19,76 +21,147 @@ interface Order {
   status: "Pending" | "Processing" | "Shipped" | "Delivered";
 }
 
-export default function AdminOrdersPage() {
-  const [orders, setOrders] = useState<Order[]>([
-    {
-      id: "BB-9204",
-      customer: "Farhana Yasmin",
-      phone: "+8801712345678",
-      address: "House 12, Road 4, Banani, Dhaka",
-      date: "May 24, 2026 02:40 PM",
-      items: [
-        { name: "Anua Heartleaf 77% Soothing Toner (250ml)", qty: 1, price: 2100 }
-      ],
-      shipping: 60,
-      status: "Delivered"
-    },
-    {
-      id: "BB-9203",
-      customer: "Imran Khan",
-      phone: "+8801912987654",
-      address: "Plot 3, Sector 7, Uttara, Dhaka",
-      date: "May 24, 2026 01:15 PM",
-      items: [
-        { name: "AGE-R Booster Pro Facial Device Glow Treatment Pink", qty: 1, price: 24500 }
-      ],
-      shipping: 60,
-      status: "Pending"
-    },
-    {
-      id: "BB-9202",
-      customer: "Nusrat Jahan",
-      phone: "+8801643998877",
-      address: "House 362, East Rampura, Dhaka 1219",
-      date: "May 24, 2026 11:20 AM",
-      items: [
-        { name: "Niacinamide Brightening Essence (120ml)", qty: 2, price: 1850 }
-      ],
-      shipping: 60,
-      status: "Processing"
-    },
-    {
-      id: "BB-9201",
-      customer: "Sajid Hasan",
-      phone: "+8801811223344",
-      address: "Moghbazar Outer Circular Rd, Dhaka 1217",
-      date: "May 23, 2026 06:45 PM",
-      items: [
-        { name: "Sunsilk Power Shot Treatment For Damage Repair (20ml)", qty: 4, price: 160 }
-      ],
-      shipping: 60,
-      status: "Delivered"
-    },
-    {
-      id: "BB-9200",
-      customer: "Ayesha Siddiqua",
-      phone: "+8801555667788",
-      address: "Block C, Lalmatia, Dhaka 1207",
-      date: "May 23, 2026 04:30 PM",
-      items: [
-        { name: "L'Oréal Paris Elvive Bond Repair Shampoo (200ml)", qty: 1, price: 2350 }
-      ],
-      shipping: 60,
-      status: "Processing"
-    }
-  ]);
+const INITIAL_MOCK_ORDERS: Order[] = [
+  {
+    id: "BB-9204",
+    customer: "Farhana Yasmin",
+    phone: "+8801712345678",
+    address: "House 12, Road 4, Banani, Dhaka",
+    date: "May 24, 2026 02:40 PM",
+    items: [
+      { name: "Anua Heartleaf 77% Soothing Toner (250ml)", qty: 1, price: 2100 }
+    ],
+    shipping: 60,
+    status: "Delivered"
+  },
+  {
+    id: "BB-9203",
+    customer: "Imran Khan",
+    phone: "+8801912987654",
+    address: "Plot 3, Sector 7, Uttara, Dhaka",
+    date: "May 24, 2026 01:15 PM",
+    items: [
+      { name: "AGE-R Booster Pro Facial Device Glow Treatment Pink", qty: 1, price: 24500 }
+    ],
+    shipping: 60,
+    status: "Pending"
+  },
+  {
+    id: "BB-9202",
+    customer: "Nusrat Jahan",
+    phone: "+8801643998877",
+    address: "House 362, East Rampura, Dhaka 1219",
+    date: "May 24, 2026 11:20 AM",
+    items: [
+      { name: "Niacinamide Brightening Essence (120ml)", qty: 2, price: 1850 }
+    ],
+    shipping: 60,
+    status: "Processing"
+  },
+  {
+    id: "BB-9201",
+    customer: "Sajid Hasan",
+    phone: "+8801811223344",
+    address: "Moghbazar Outer Circular Rd, Dhaka 1217",
+    date: "May 23, 2026 06:45 PM",
+    items: [
+      { name: "Sunsilk Power Shot Treatment For Damage Repair (20ml)", qty: 4, price: 160 }
+    ],
+    shipping: 60,
+    status: "Delivered"
+  },
+  {
+    id: "BB-9200",
+    customer: "Ayesha Siddiqua",
+    phone: "+8801555667788",
+    address: "Block C, Lalmatia, Dhaka 1207",
+    date: "May 23, 2026 04:30 PM",
+    items: [
+      { name: "L'Oréal Paris Elvive Bond Repair Shampoo (200ml)", qty: 1, price: 2350 }
+    ],
+    shipping: 60,
+    status: "Processing"
+  }
+];
 
+export default function AdminOrdersPage() {
+  const { isDbConnected } = useApp();
+  const [orders, setOrders] = useState<Order[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
   const [selectedInvoice, setSelectedInvoice] = useState<Order | null>(null);
 
-  const handleStatusChange = (orderId: string, newStatus: "Pending" | "Processing" | "Shipped" | "Delivered") => {
-    setOrders(orders.map(o => o.id === orderId ? { ...o, status: newStatus } : o));
+  const fetchOrders = async () => {
+    let liveOrders = [];
+    if (isDbConnected) {
+      try {
+        const { data, error } = await supabase
+          .from("orders")
+          .select("*")
+          .order("date", { ascending: false });
+        if (error) throw error;
+        if (data) {
+          liveOrders = data;
+        }
+      } catch (err) {
+        console.error("Failed to fetch live orders from Supabase:", err);
+      }
+    }
+    
+    // Load local orders from localStorage
+    let localOrders = [];
+    if (typeof window !== "undefined") {
+      const localOrdersStr = localStorage.getItem("beautybooth_local_orders");
+      localOrders = localOrdersStr ? JSON.parse(localOrdersStr) : [];
+    }
+    
+    // Merge live orders and local orders
+    let mergedOrders = [...liveOrders];
+    const liveIds = new Set(liveOrders.map(o => o.id));
+    
+    localOrders.forEach((o: any) => {
+      if (!liveIds.has(o.id)) {
+        mergedOrders.push(o);
+      }
+    });
+    
+    if (mergedOrders.length === 0) {
+      mergedOrders = INITIAL_MOCK_ORDERS;
+    }
+    
+    setOrders(mergedOrders);
+  };
+
+  useEffect(() => {
+    fetchOrders();
+  }, [isDbConnected]);
+
+  const handleStatusChange = async (orderId: string, newStatus: "Pending" | "Processing" | "Shipped" | "Delivered") => {
+    if (isDbConnected) {
+      try {
+        const { error } = await supabase
+          .from("orders")
+          .update({ status: newStatus })
+          .eq("id", orderId);
+        if (error) throw error;
+      } catch (err: any) {
+        alert("Failed to update status in Supabase: " + err.message);
+      }
+    }
+    
+    // Always update local state
+    const updated = orders.map(o => o.id === orderId ? { ...o, status: newStatus } : o);
+    setOrders(updated);
+    
+    // Update local storage if applicable
+    if (typeof window !== "undefined") {
+      const localOrdersStr = localStorage.getItem("beautybooth_local_orders");
+      if (localOrdersStr) {
+        const localOrders = JSON.parse(localOrdersStr);
+        const updatedLocal = localOrders.map((o: any) => o.id === orderId ? { ...o, status: newStatus } : o);
+        localStorage.setItem("beautybooth_local_orders", JSON.stringify(updatedLocal));
+      }
+    }
   };
 
   const filteredOrders = orders.filter(o => {

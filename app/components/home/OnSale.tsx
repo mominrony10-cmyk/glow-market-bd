@@ -1,12 +1,11 @@
 "use client";
 
 import { useApp } from "../../context/AppContext";
-import { PRODUCTS_DATA } from "../../data/products";
 
 export default function OnSale() {
-  const { addToCart, toggleWishlist, wishlist, setShowQuickView } = useApp();
+  const { products, addToCart, toggleWishlist, wishlist, setShowQuickView } = useApp();
 
-  const onSaleProducts = PRODUCTS_DATA.filter((p) => p.discount > 0);
+  const onSaleProducts = products.filter((p) => p.discount > 0);
 
   return (
     <section className="max-w-7xl mx-auto px-4 mt-16">

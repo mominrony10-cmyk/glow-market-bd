@@ -2,13 +2,12 @@
 
 import React, { useState, useEffect, useMemo, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { PRODUCTS_DATA } from "../data/products";
 import { useApp, Product } from "../context/AppContext";
 
 function ProductsContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { addToCart, toggleWishlist, wishlist, setToastMessage } = useApp();
+  const { products, addToCart, toggleWishlist, wishlist, setToastMessage } = useApp();
 
   // URL State Synchronizer
   const initialCategory = searchParams?.get("category") || "";
@@ -127,7 +126,7 @@ function ProductsContent() {
 
   // Filtering Logic
   const filteredProducts = useMemo(() => {
-    return PRODUCTS_DATA.filter((p) => {
+    return products.filter((p) => {
       // 1. Text Search Filter
       if (searchQuery) {
         const query = searchQuery.toLowerCase();

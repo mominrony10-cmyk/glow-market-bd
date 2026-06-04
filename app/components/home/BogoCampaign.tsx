@@ -6,9 +6,9 @@ import { PRODUCTS_DATA } from "../../data/products";
 
 export default function BogoCampaign() {
   const router = useRouter();
-  const { addToCart, setShowQuickView } = useApp();
+  const { products, addToCart, setShowQuickView } = useApp();
 
-  const bogoProducts = PRODUCTS_DATA.filter((p) => p.isBogo);
+  const bogoProducts = products.filter((p) => p.isBogo);
 
   return (
     <section className="max-w-7xl mx-auto px-4 mt-16 select-none">

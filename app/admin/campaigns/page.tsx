@@ -1,6 +1,8 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useApp } from "../../context/AppContext";
+import { supabase } from "../../lib/supabase";
 
 interface Coupon {
   code: string;
@@ -10,55 +12,224 @@ interface Coupon {
 }
 
 export default function AdminCampaignsPage() {
+  const { isDbConnected } = useApp();
   const [campaignStatus, setCampaignStatus] = useState<"Running" | "Paused">("Running");
   const [countdownDate, setCountdownDate] = useState("2026-05-30T23:59:59");
+  const [coupons, setCoupons] = useState<Coupon[]>([]);
   
-  const [coupons, setCoupons] = useState<Coupon[]>([
-    { code: "BOOTH15", discount: 15, status: "Active", expiry: "2026-05-31" },
-    { code: "BOISHAKHI25", discount: 25, status: "Active", expiry: "2026-06-15" },
-    { code: "GLOW10", discount: 10, status: "Active", expiry: "2026-05-28" },
-    { code: "EID30", discount: 30, status: "Expired", expiry: "2026-04-12" }
-  ]);
+  // Indicators to show sync state (e.g. background fetch status)
+  const [synced, setSynced] = useState(false);
+  const [syncing, setSyncing] = useState(false);
 
   // New coupon form
   const [newCode, setNewCode] = useState("");
   const [newDiscount, setNewDiscount] = useState(15);
   const [newExpiry, setNewExpiry] = useState("2026-06-30");
 
-  const handleToggleCampaign = () => {
-    setCampaignStatus(campaignStatus === "Running" ? "Paused" : "Running");
+  // 1. Initial Load: Load cache from localStorage (SWR pattern step 1)
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const cachedStatus = localStorage.getItem("beautybooth_campaign_status");
+      const cachedCountdown = localStorage.getItem("beautybooth_campaign_countdown");
+      const cachedCoupons = localStorage.getItem("beautybooth_campaign_coupons");
+
+      if (cachedStatus) {
+        setCampaignStatus(cachedStatus as "Running" | "Paused");
+      }
+      if (cachedCountdown) {
+        setCountdownDate(cachedCountdown);
+      }
+      if (cachedCoupons) {
+        try {
+          setCoupons(JSON.parse(cachedCoupons));
+        } catch (e) {
+          console.error(e);
+        }
+      } else {
+        // Fallback to default mock coupons
+        const defaultCoupons: Coupon[] = [
+          { code: "BOOTH15", discount: 15, status: "Active", expiry: "2026-05-31" },
+          { code: "BOISHAKHI25", discount: 25, status: "Active", expiry: "2026-06-15" },
+          { code: "GLOW10", discount: 10, status: "Active", expiry: "2026-05-28" },
+          { code: "EID30", discount: 30, status: "Expired", expiry: "2026-04-12" }
+        ];
+        setCoupons(defaultCoupons);
+        localStorage.setItem("beautybooth_campaign_coupons", JSON.stringify(defaultCoupons));
+      }
+    }
+  }, []);
+
+  // 2. Background Sync: Fetch from database asynchronously in background (SWR pattern step 2 & 3)
+  useEffect(() => {
+    async function backgroundFetch() {
+      if (!isDbConnected) return;
+      setSyncing(true);
+
+      try {
+        // Fetch campaign settings
+        const { data: settingsData, error: settingsError } = await supabase
+          .from("campaign_settings")
+          .select("*")
+          .eq("id", "boishakhi")
+          .single();
+
+        if (settingsError) {
+          // If table doesn't exist, we log and proceed
+          console.warn("Could not load campaign settings from db (table might not exist):", settingsError.message);
+        } else if (settingsData) {
+          setCampaignStatus(settingsData.status);
+          setCountdownDate(settingsData.countdownDate);
+          localStorage.setItem("beautybooth_campaign_status", settingsData.status);
+          localStorage.setItem("beautybooth_campaign_countdown", settingsData.countdownDate);
+        }
+
+        // Fetch coupons
+        const { data: couponsData, error: couponsError } = await supabase
+          .from("coupons")
+          .select("*")
+          .order("code", { ascending: true });
+
+        if (couponsError) {
+          console.warn("Could not load coupons from db (table might not exist):", couponsError.message);
+        } else if (couponsData) {
+          setCoupons(couponsData);
+          localStorage.setItem("beautybooth_campaign_coupons", JSON.stringify(couponsData));
+        }
+
+        setSynced(true);
+      } catch (err) {
+        console.error("Background sync failed:", err);
+      } finally {
+        setSyncing(false);
+      }
+    }
+
+    backgroundFetch();
+  }, [isDbConnected]);
+
+  const handleToggleCampaign = async () => {
+    const nextStatus = campaignStatus === "Running" ? "Paused" : "Running";
+    setCampaignStatus(nextStatus);
+    localStorage.setItem("beautybooth_campaign_status", nextStatus);
+
+    if (isDbConnected) {
+      try {
+        const { error } = await supabase
+          .from("campaign_settings")
+          .upsert({ id: "boishakhi", status: nextStatus, countdownDate }, { onConflict: "id" });
+        if (error) throw error;
+      } catch (err: any) {
+        console.error("Failed to persist campaign status to DB:", err.message);
+      }
+    }
   };
 
-  const handleAddCoupon = (e: React.FormEvent) => {
+  const handleSyncTimer = async (deadline: string) => {
+    setCountdownDate(deadline);
+    localStorage.setItem("beautybooth_campaign_countdown", deadline);
+
+    if (isDbConnected) {
+      try {
+        const { error } = await supabase
+          .from("campaign_settings")
+          .upsert({ id: "boishakhi", status: campaignStatus, countdownDate: deadline }, { onConflict: "id" });
+        if (error) throw error;
+        alert("Countdown deadline applied to database and frontend timer!");
+      } catch (err: any) {
+        console.error("Failed to persist countdown date to DB:", err.message);
+        alert("Countdown deadline updated locally! (Failed to write to DB: " + err.message + ")");
+      }
+    } else {
+      alert("Countdown deadline applied locally!");
+    }
+  };
+
+  const handleAddCoupon = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newCode) return;
+    
+    const addedCode = newCode.toUpperCase().trim();
     const added: Coupon = {
-      code: newCode.toUpperCase().trim(),
+      code: addedCode,
       discount: newDiscount,
       status: "Active",
       expiry: newExpiry
     };
-    setCoupons([added, ...coupons]);
+
+    const nextCoupons = [added, ...coupons];
+    setCoupons(nextCoupons);
+    localStorage.setItem("beautybooth_campaign_coupons", JSON.stringify(nextCoupons));
     setNewCode("");
+
+    if (isDbConnected) {
+      try {
+        const { error } = await supabase
+          .from("coupons")
+          .insert([added]);
+        if (error) throw error;
+      } catch (err: any) {
+        console.error("Failed to save coupon to DB:", err.message);
+        alert("Coupon added locally! (Failed to write to DB: " + err.message + ")");
+      }
+    }
   };
 
-  const handleToggleCoupon = (code: string) => {
-    setCoupons(coupons.map(c => {
+  const handleToggleCoupon = async (code: string) => {
+    let nextStatus: "Active" | "Expired" = "Active";
+    const nextCoupons = coupons.map(c => {
       if (c.code === code) {
-        return { ...c, status: c.status === "Active" ? "Expired" : "Active" };
+        nextStatus = c.status === "Active" ? "Expired" : "Active";
+        return { ...c, status: nextStatus };
       }
       return c;
-    }));
+    });
+
+    setCoupons(nextCoupons);
+    localStorage.setItem("beautybooth_campaign_coupons", JSON.stringify(nextCoupons));
+
+    if (isDbConnected) {
+      try {
+        const { error } = await supabase
+          .from("coupons")
+          .update({ status: nextStatus })
+          .eq("code", code);
+        if (error) throw error;
+      } catch (err: any) {
+        console.error("Failed to update coupon status in DB:", err.message);
+      }
+    }
   };
 
   return (
     <div className="flex flex-col gap-6">
       {/* Header */}
-      <div className="flex flex-col gap-1">
-        <h1 className="text-3xl font-black text-zinc-900 tracking-tight">Campaign & Promos Room</h1>
-        <span className="text-[13px] font-bold text-zinc-400 uppercase tracking-widest">
-          Govern coupon definitions, campaigns, and deadlocks
-        </span>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="flex flex-col gap-1">
+          <h1 className="text-3xl font-black text-zinc-900 tracking-tight">Campaign & Promos Room</h1>
+          <span className="text-[13px] font-bold text-zinc-400 uppercase tracking-widest">
+            Govern coupon definitions, campaigns, and deadlocks
+          </span>
+        </div>
+        
+        {/* SWR Visual Indicator */}
+        <div className="flex items-center gap-2 bg-zinc-50 border border-zinc-150 rounded-2xl px-4 py-2 self-start sm:self-center">
+          {syncing ? (
+            <>
+              <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
+              <span className="text-xs font-bold text-zinc-500">Syncing with DB...</span>
+            </>
+          ) : synced ? (
+            <>
+              <span className="w-2 h-2 rounded-full bg-emerald-500" />
+              <span className="text-xs font-bold text-zinc-600">Synced with DB</span>
+            </>
+          ) : (
+            <>
+              <span className="w-2 h-2 rounded-full bg-zinc-300" />
+              <span className="text-xs font-bold text-zinc-400">Offline / Cached</span>
+            </>
+          )}
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -112,7 +283,7 @@ export default function AdminCampaignsPage() {
                     className="flex-1 bg-zinc-50/50 border border-zinc-200 rounded-xl p-3 text-xs text-zinc-800 focus:outline-none focus:border-[#FF1A58] focus:bg-white transition-all font-bold"
                   />
                   <button
-                    onClick={() => alert("Countdown deadline applied to frontend timer!")}
+                    onClick={() => handleSyncTimer(countdownDate)}
                     className="bg-zinc-50 hover:bg-zinc-100 text-zinc-700 px-5 py-3 rounded-xl text-xs font-black uppercase transition-all border border-zinc-200 active:scale-95 duration-100 cursor-pointer"
                   >
                     Sync Timer
@@ -152,7 +323,7 @@ export default function AdminCampaignsPage() {
                       className={`text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full ${
                         coupon.status === "Active"
                           ? "bg-emerald-50 text-emerald-600 border border-emerald-100"
-                          : "bg-rose-50 text-rose-600 border border-rose-100"
+                          : "bg-rose-50 text-rose-600 border-rose-100"
                       }`}
                     >
                       {coupon.status}
@@ -166,6 +337,11 @@ export default function AdminCampaignsPage() {
                   </div>
                 </div>
               ))}
+              {coupons.length === 0 && (
+                <div className="col-span-2 text-center py-6 text-xs text-zinc-400 font-bold">
+                  No coupons found.
+                </div>
+              )}
             </div>
           </div>
         </div>

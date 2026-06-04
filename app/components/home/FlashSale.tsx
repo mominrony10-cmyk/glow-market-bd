@@ -1,12 +1,11 @@
 "use client";
 
 import { useApp } from "../../context/AppContext";
-import { PRODUCTS_DATA } from "../../data/products";
 
 export default function FlashSale() {
-  const { addToCart, setShowQuickView } = useApp();
+  const { products, addToCart, setShowQuickView } = useApp();
 
-  const flashSaleProducts = PRODUCTS_DATA.filter((p) => p.isFlashSale);
+  const flashSaleProducts = products.filter((p) => p.isFlashSale);
 
   return (
     <section className="max-w-7xl mx-auto px-4 mt-16 select-none">

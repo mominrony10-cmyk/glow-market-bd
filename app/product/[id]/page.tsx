@@ -20,7 +20,6 @@ import {
   Award01Icon,
 } from "@hugeicons/core-free-icons";
 import { useApp, Product } from "../../context/AppContext";
-import { PRODUCTS_DATA } from "../../data/products";
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -31,6 +30,8 @@ export default function ProductDetailPage({ params }: PageProps) {
   const productId = parseInt(resolvedParams.id, 10);
   
   const {
+    products,
+    productsLoading,
     addToCart,
     toggleWishlist,
     wishlist,
@@ -38,7 +39,18 @@ export default function ProductDetailPage({ params }: PageProps) {
     setToastMessage,
   } = useApp();
 
-  const product = PRODUCTS_DATA.find((p) => p.id === productId);
+  if (productsLoading) {
+    return (
+      <div className="min-h-[60vh] flex flex-col items-center justify-center p-6 text-center">
+        <span className="w-10 h-10 rounded-full border-4 border-zinc-200 border-t-[#FF1A58] animate-spin" />
+        <p className="text-zinc-500 text-xs font-bold uppercase tracking-widest mt-4 select-none">
+          Loading Authentic Skincare Item...
+        </p>
+      </div>
+    );
+  }
+
+  const product = products.find((p) => p.id === productId);
 
   // States for dynamic rendering
   const [countdown, setCountdown] = useState({ days: 2, hours: 14, minutes: 30, seconds: 10 });

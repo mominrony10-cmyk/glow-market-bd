@@ -14,6 +14,7 @@ import {
 } from "@hugeicons/core-free-icons";
 import { useApp } from "../context/AppContext";
 import { useRouter, usePathname } from "next/navigation";
+import { supabase } from "../lib/supabase";
 
 export default function GlobalOverlays() {
   const {
@@ -29,7 +30,81 @@ export default function GlobalOverlays() {
     clearCart,
     showQuickView,
     setShowQuickView,
+    isDbConnected,
   } = useApp();
+
+  const [showCheckoutModal, setShowCheckoutModal] = useState(false);
+  const [customerName, setCustomerName] = useState("");
+  const [customerPhone, setCustomerPhone] = useState("");
+  const [customerAddress, setCustomerAddress] = useState("");
+  const [placingOrder, setPlacingOrder] = useState(false);
+
+  const handlePlaceOrder = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!customerName || !customerPhone || !customerAddress) {
+      alert("Please fill in all checkout fields.");
+      return;
+    }
+
+    setPlacingOrder(true);
+    const orderId = "BB-" + Math.floor(100000 + Math.random() * 900000);
+    const orderDate = new Date().toLocaleString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+      hour: "numeric",
+      minute: "numeric",
+      hour12: true
+    });
+
+    const orderItems = cartItems.map(item => ({
+      name: item.product.name,
+      qty: item.quantity,
+      price: item.product.price
+    }));
+
+    const shippingFee = cartTotal >= 899 ? 0 : 80;
+
+    const orderData = {
+      id: orderId,
+      customer: customerName,
+      phone: customerPhone,
+      address: customerAddress,
+      date: orderDate,
+      items: orderItems,
+      shipping: shippingFee,
+      status: "Pending"
+    };
+
+    if (isDbConnected) {
+      try {
+        const { error } = await supabase
+          .from("orders")
+          .insert([orderData]);
+        if (error) throw error;
+      } catch (err: any) {
+        alert("Failed to save order to database: " + err.message);
+        setPlacingOrder(false);
+        return;
+      }
+    }
+
+    // Save to local storage for local testing fallback
+    if (typeof window !== "undefined") {
+      const localOrdersStr = localStorage.getItem("beautybooth_local_orders");
+      const localOrders = localOrdersStr ? JSON.parse(localOrdersStr) : [];
+      localStorage.setItem("beautybooth_local_orders", JSON.stringify([orderData, ...localOrders]));
+    }
+
+    setToastMessage(`Order ${orderId} placed successfully via Cash on Delivery!`);
+    clearCart();
+    setCustomerName("");
+    setCustomerPhone("");
+    setCustomerAddress("");
+    setShowCheckoutModal(false);
+    setShowCartDrawer(false);
+    setPlacingOrder(false);
+  };
 
   const router = useRouter();
   const pathname = usePathname();
@@ -184,11 +259,7 @@ export default function GlobalOverlays() {
 
                 <div className="flex flex-col gap-2">
                   <button
-                    onClick={() => {
-                      setToastMessage("Order placed successfully via Cash on Delivery! Check your phone.");
-                      clearCart();
-                      setShowCartDrawer(false);
-                    }}
+                    onClick={() => setShowCheckoutModal(true)}
                     className="w-full bg-[#0B8043] hover:bg-[#096a37] text-white font-extrabold text-xs uppercase tracking-wider py-3.5 rounded-xl transition-all shadow cursor-pointer text-center"
                   >
                     Checkout with Cash On Delivery
@@ -339,6 +410,98 @@ export default function GlobalOverlays() {
                 </div>
               </div>
             </div>
+          </div>
+        </div>
+      )}
+      {/* 5. Checkout Details Modal */}
+      {showCheckoutModal && (
+        <div className="fixed inset-0 z-55 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4" onClick={() => setShowCheckoutModal(false)}>
+          <div
+            className="bg-white rounded-3xl w-full max-w-md overflow-hidden shadow-2xl relative border border-zinc-200 animate-scale-up"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              onClick={() => setShowCheckoutModal(false)}
+              className="absolute top-4 right-4 z-10 w-8 h-8 rounded-full bg-zinc-100 hover:bg-zinc-200 text-zinc-700 flex items-center justify-center transition-colors border border-zinc-200 cursor-pointer"
+            >
+              ✕
+            </button>
+
+            <form onSubmit={handlePlaceOrder} className="p-6 flex flex-col gap-5 text-left">
+              <div className="flex flex-col gap-1">
+                <span className="text-[10px] font-black text-[#FF1A58] uppercase tracking-widest">
+                  Secure Checkout
+                </span>
+                <h4 className="text-xl font-black text-black">Delivery Information</h4>
+                <p className="text-xs text-zinc-400 font-semibold leading-normal">
+                  Please enter your delivery details below to finalize your Cash on Delivery order.
+                </p>
+              </div>
+
+              <div className="flex flex-col gap-4">
+                {/* Full Name */}
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-[11px] font-extrabold text-zinc-500 uppercase tracking-wider">
+                    Full Name
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={customerName}
+                    onChange={(e) => setCustomerName(e.target.value)}
+                    placeholder="e.g. Farhana Yasmin"
+                    className="w-full bg-zinc-50/50 border border-zinc-200 focus:border-[#FF1A58] focus:bg-white rounded-xl py-3 px-4 text-xs font-semibold text-zinc-800 focus:outline-none transition-all"
+                  />
+                </div>
+
+                {/* Phone Number */}
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-[11px] font-extrabold text-zinc-500 uppercase tracking-wider">
+                    Phone Number
+                  </label>
+                  <input
+                    type="tel"
+                    required
+                    value={customerPhone}
+                    onChange={(e) => setCustomerPhone(e.target.value)}
+                    placeholder="e.g. +8801712345678"
+                    className="w-full bg-zinc-50/50 border border-zinc-200 focus:border-[#FF1A58] focus:bg-white rounded-xl py-3 px-4 text-xs font-semibold text-zinc-800 focus:outline-none transition-all"
+                  />
+                </div>
+
+                {/* Delivery Address */}
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-[11px] font-extrabold text-zinc-500 uppercase tracking-wider">
+                    Delivery Address
+                  </label>
+                  <textarea
+                    required
+                    rows={3}
+                    value={customerAddress}
+                    onChange={(e) => setCustomerAddress(e.target.value)}
+                    placeholder="House/Road, Area, City"
+                    className="w-full bg-zinc-50/50 border border-zinc-200 focus:border-[#FF1A58] focus:bg-white rounded-xl py-3 px-4 text-xs font-semibold text-zinc-800 focus:outline-none transition-all resize-none leading-relaxed"
+                  />
+                </div>
+              </div>
+
+              {/* Order total info banner */}
+              <div className="bg-zinc-50 border border-zinc-100 p-4 rounded-2xl flex items-center justify-between text-xs font-extrabold">
+                <span className="text-zinc-500">Order Grand Total:</span>
+                <span className="text-[#FF1A58] text-sm font-black">
+                  ৳{cartTotal >= 899 ? cartTotal : cartTotal + 80}
+                </span>
+              </div>
+
+              {/* Confirm button */}
+              <button
+                type="submit"
+                disabled={placingOrder}
+                className="w-full bg-[#0B8043] hover:bg-[#096a37] disabled:opacity-50 text-white font-extrabold text-xs uppercase tracking-wider py-4 rounded-xl transition-all shadow cursor-pointer text-center"
+              >
+                {placingOrder ? "Placing Order..." : "Confirm Cash on Delivery"}
+              </button>
+            </form>
           </div>
         </div>
       )}

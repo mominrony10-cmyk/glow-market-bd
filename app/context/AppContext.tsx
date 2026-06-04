@@ -1,6 +1,8 @@
 "use client";
 
 import React, { createContext, useContext, useState, useEffect } from "react";
+import { PRODUCTS_DATA } from "../data/products";
+import { supabase, hasValidSupabaseConfig } from "../lib/supabase";
 
 // Reuse the Product interface
 export interface Product {
@@ -45,11 +47,30 @@ interface AppContextType {
   clearCart: () => void;
   showQuickView: Product | null;
   setShowQuickView: (product: Product | null) => void;
+  products: Product[];
+  productsLoading: boolean;
+  isDbConnected: boolean;
+  refreshProducts: () => Promise<void>;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export function AppProvider({ children }: { children: React.ReactNode }) {
+  const [products, setProducts] = useState<Product[]>(() => {
+    if (typeof window !== "undefined") {
+      const local = localStorage.getItem("beautybooth_local_products");
+      if (local) {
+        try {
+          return JSON.parse(local);
+        } catch (e) {
+          console.error("Failed to parse local products:", e);
+        }
+      }
+    }
+    return hasValidSupabaseConfig ? [] : PRODUCTS_DATA;
+  });
+  const [productsLoading, setProductsLoading] = useState(true);
+  const [isDbConnected, setIsDbConnected] = useState(false);
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [cartCount, setCartCount] = useState(0);
   const [wishlist, setWishlist] = useState<Set<number>>(new Set());
@@ -58,6 +79,60 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [showCartDrawer, setShowCartDrawer] = useState(false);
   const [activeBoishakhiTab, setActiveBoishakhiTab] = useState("Hair Care");
   const [showQuickView, setShowQuickView] = useState<Product | null>(null);
+
+  // Fetch products from Supabase strictly
+  const refreshProducts = async () => {
+    if (!hasValidSupabaseConfig) {
+      if (typeof window !== "undefined") {
+        const local = localStorage.getItem("beautybooth_local_products");
+        setProducts(local ? JSON.parse(local) : PRODUCTS_DATA);
+      } else {
+        setProducts(PRODUCTS_DATA);
+      }
+      setIsDbConnected(false);
+      setProductsLoading(false);
+      return;
+    }
+
+    try {
+      setProductsLoading(true);
+      const { data, error } = await supabase
+        .from("products")
+        .select("*")
+        .order("id", { ascending: false });
+
+      if (error) {
+        throw error;
+      }
+
+      if (data) {
+        setProducts(data as Product[]);
+        setIsDbConnected(true);
+        if (typeof window !== "undefined") {
+          localStorage.setItem("beautybooth_local_products", JSON.stringify(data));
+        }
+      }
+    } catch (err: any) {
+      console.warn("Failed to fetch products from Supabase:", err.message || err);
+      if (typeof window !== "undefined") {
+        const local = localStorage.getItem("beautybooth_local_products");
+        setProducts(local ? JSON.parse(local) : PRODUCTS_DATA);
+      } else {
+        setProducts(PRODUCTS_DATA);
+      }
+      setIsDbConnected(false);
+    } finally {
+      setProductsLoading(false);
+    }
+  };
+
+  // Initial load
+  useEffect(() => {
+    if (typeof window !== "undefined" && !localStorage.getItem("beautybooth_local_products")) {
+      localStorage.setItem("beautybooth_local_products", JSON.stringify(PRODUCTS_DATA));
+    }
+    refreshProducts();
+  }, []);
 
   // Sync cart count
   useEffect(() => {
@@ -111,7 +186,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     });
   };
 
-  const cartTotal = cartItems.reduce((sum, item) => sum + item.product.price * item.quantity, 0);
+  const cartTotal = cartItems.reduce((sum, item) => {
+    const latestProduct = products.find((p) => p.id === item.product.id) || item.product;
+    return sum + latestProduct.price * item.quantity;
+  }, 0);
 
   const clearCart = () => {
     setCartItems([]);
@@ -138,6 +216,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         clearCart,
         showQuickView,
         setShowQuickView,
+        products,
+        productsLoading,
+        isDbConnected,
+        refreshProducts,
       }}
     >
       {children}
@@ -152,3 +234,4 @@ export function useApp() {
   }
   return context;
 }
+

@@ -7,6 +7,7 @@ import { PRODUCTS_DATA } from "../../data/products";
 export default function BoishakhiCampaign() {
   const router = useRouter();
   const {
+    products,
     activeBoishakhiTab,
     setActiveBoishakhiTab,
     addToCart,
@@ -16,7 +17,7 @@ export default function BoishakhiCampaign() {
     setToastMessage,
   } = useApp();
 
-  const filteredProducts = PRODUCTS_DATA.filter((p) => p.category === activeBoishakhiTab);
+  const filteredProducts = products.filter((p) => p.category === activeBoishakhiTab);
 
   return (
     <section className="max-w-7xl mx-auto px-4 mt-12">

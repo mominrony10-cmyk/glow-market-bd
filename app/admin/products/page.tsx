@@ -1,11 +1,199 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { PRODUCTS_DATA } from "../../data/products";
-import { Product } from "../../context/AppContext";
+import { useApp, Product } from "../../context/AppContext";
+import { supabase } from "../../lib/supabase";
+
+interface DragDropImageUploadProps {
+  imageUrl: string;
+  onUpload: (file: File) => void;
+  uploading: boolean;
+}
+
+function DragDropImageUpload({ imageUrl, onUpload, uploading }: DragDropImageUploadProps) {
+  const [isDragActive, setIsDragActive] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleDrag = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.type === "dragenter" || e.type === "dragover") {
+      setIsDragActive(true);
+    } else if (e.type === "dragleave") {
+      setIsDragActive(false);
+    }
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragActive(false);
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+      onUpload(e.dataTransfer.files[0]);
+    }
+  };
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    e.preventDefault();
+    if (e.target.files && e.target.files[0]) {
+      onUpload(e.target.files[0]);
+    }
+  };
+
+  return (
+    <div className="flex flex-col gap-1.5">
+      <label className="text-[10px] uppercase font-bold text-zinc-400">Product Image Upload</label>
+      
+      <div
+        onDragEnter={handleDrag}
+        onDragOver={handleDrag}
+        onDragLeave={handleDrag}
+        onDrop={handleDrop}
+        onClick={() => fileInputRef.current?.click()}
+        className={`border-2 border-dashed rounded-2xl p-5 flex flex-col items-center justify-center gap-3.5 cursor-pointer transition-all duration-200 min-h-[140px] select-none ${
+          isDragActive 
+            ? "border-[#FF1A58] bg-[#FF1A58]/5" 
+            : "border-zinc-200 hover:border-zinc-300 bg-zinc-50/50 hover:bg-zinc-50"
+        }`}
+      >
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          className="hidden"
+          onChange={handleChange}
+        />
+        
+        {uploading ? (
+          <div className="flex flex-col items-center gap-2">
+            <div className="w-6 h-6 border-2 border-[#FF1A58] border-t-transparent rounded-full animate-spin"></div>
+            <span className="text-xs font-bold text-zinc-500">Uploading to Supabase Storage...</span>
+          </div>
+        ) : imageUrl ? (
+          <div className="flex items-center gap-4 w-full">
+            <div className="w-14 h-14 rounded-xl border border-zinc-150 bg-white p-1 shrink-0 overflow-hidden flex items-center justify-center">
+              <img 
+                src={imageUrl} 
+                alt="Preview" 
+                className="w-full h-full object-contain" 
+                onError={(e) => {
+                  // Fallback for broken/pasted custom image URLs
+                  (e.target as HTMLImageElement).src = "https://images.unsplash.com/photo-1590156546746-c2370ae25d75?q=80&w=120&auto=format&fit=crop";
+                }}
+              />
+            </div>
+            <div className="flex flex-col min-w-0 text-left flex-1">
+              <span className="text-[11px] font-black text-zinc-800 uppercase tracking-wide">Image Loaded</span>
+              <span className="text-[10px] text-zinc-400 truncate max-w-[220px] mt-0.5 font-semibold">{imageUrl}</span>
+              <span className="text-[9px] text-[#FF1A58] font-black uppercase mt-1 tracking-wider">Drag or click to replace image</span>
+            </div>
+          </div>
+        ) : (
+          <div className="flex flex-col items-center text-center">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              strokeWidth="2"
+              stroke="currentColor"
+              className="w-7 h-7 text-zinc-400 mb-1"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M12 16.5V9.75m0 0l3 3m-3-3l-3 3M6.75 19.5a4.5 4.5 0 01-1.41-8.775 5.25 5.25 0 0110.233-2.33 3 3 0 013.758 3.848A3.752 3.752 0 0118 19.5H6.75z"
+              />
+            </svg>
+            <span className="text-[11px] font-bold text-zinc-600">Drag & drop image here, or click to browse</span>
+            <span className="text-[9px] text-zinc-400 mt-1 font-semibold">Supports all formats (PNG, JPG, WEBP, SVG, GIF, etc.)</span>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
 
 export default function AdminProductsPage() {
-  const [products, setProducts] = useState<Product[]>(PRODUCTS_DATA);
+  const { products: contextProducts, isDbConnected, refreshProducts } = useApp();
+  const [products, setProducts] = useState<Product[]>(contextProducts);
+  const [uploading, setUploading] = useState(false);
+
+  const handleImageUpload = async (file: File, isEdit: boolean) => {
+    setUploading(true);
+    try {
+      // 1. Try to create bucket
+      try {
+        await supabase.storage.createBucket("products", {
+          public: true,
+          allowedMimeTypes: ["image/*"],
+        });
+      } catch (err) {
+        // Ignore error if bucket already exists
+      }
+
+      // 2. Upload file
+      const fileExt = file.name.split(".").pop();
+      const fileName = `${Date.now()}-${Math.random().toString(36).substring(2, 9)}.${fileExt}`;
+      const filePath = `product-images/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from("products")
+        .upload(filePath, file, {
+          cacheControl: "3600",
+          upsert: true
+        });
+
+      if (uploadError) throw uploadError;
+
+      // 3. Get Public URL
+      const { data: urlData } = supabase.storage
+        .from("products")
+        .getPublicUrl(filePath);
+
+      if (urlData?.publicUrl) {
+        if (isEdit) {
+          setEditImageUrl(urlData.publicUrl);
+        } else {
+          setNewImageUrl(urlData.publicUrl);
+        }
+      }
+    } catch (err: any) {
+      console.error("Upload error details:", err);
+      if (err.message?.includes("Bucket not found") || err.message?.includes("bucket")) {
+        const storageSql = `INSERT INTO storage.buckets (id, name, public) VALUES ('products', 'products', true) ON CONFLICT (id) DO NOTHING;
+CREATE POLICY "Public Access Objects" ON storage.objects FOR SELECT USING (bucket_id = 'products');
+CREATE POLICY "Public Insert Objects" ON storage.objects FOR INSERT WITH CHECK (bucket_id = 'products');
+CREATE POLICY "Public Update Objects" ON storage.objects FOR UPDATE USING (bucket_id = 'products') WITH CHECK (bucket_id = 'products');
+CREATE POLICY "Public Delete Objects" ON storage.objects FOR DELETE USING (bucket_id = 'products');`;
+        try {
+          navigator.clipboard.writeText(storageSql);
+        } catch (_) {}
+        alert(
+          "⚠️ SUPABASE BUCKET NOT FOUND!\n\n" +
+          "You need to create a public storage bucket named 'products' in your Supabase project.\n\n" +
+          "👉 Option A (1-click on Dashboard):\n" +
+          "1. Go to your Supabase Dashboard -> Storage.\n" +
+          "2. Click 'New Bucket', enter name: products, toggle 'Public bucket' to ON, and save.\n\n" +
+          "👉 Option B (SQL editor - copied to your clipboard):\n" +
+          "1. Go to your Supabase SQL Editor.\n" +
+          "2. Paste the SQL script (which we just copied to your clipboard) and click 'Run'.\n\n" +
+          "After doing one of these, try dragging/dropping your image again!"
+        );
+      } else {
+        alert(
+          "Failed to upload image: " + err.message +
+          "\n\nMake sure the 'products' storage bucket exists in your Supabase project and has public read/write RLS policies configured."
+        );
+      }
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  useEffect(() => {
+    setProducts(contextProducts);
+  }, [contextProducts]);
   const [searchQuery, setSearchQuery] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("All");
   const [skinFilter, setSkinFilter] = useState("All");
@@ -22,7 +210,7 @@ export default function AdminProductsPage() {
   const [newSkinType, setNewSkinType] = useState("Normal");
   const [newPrice, setNewPrice] = useState(1000);
   const [newOriginalPrice, setNewOriginalPrice] = useState(1200);
-  const [newImageUrl, setNewImageUrl] = useState("https://cms.beautybooth.com.bd/uploads/all/sunsilk-power-shot-treatment-for-damage-repair-20ml_89.webp");
+  const [newImageUrl, setNewImageUrl] = useState("");
 
   // Edit product form state
   const [editName, setEditName] = useState("");
@@ -31,6 +219,7 @@ export default function AdminProductsPage() {
   const [editSkinType, setEditSkinType] = useState("");
   const [editPrice, setEditPrice] = useState(0);
   const [editOriginalPrice, setEditOriginalPrice] = useState(0);
+  const [editImageUrl, setEditImageUrl] = useState("");
 
   const categories = [
     "All", "Essences", "Toner", "Moisturizers", "Accessories", "Serum", "Cleansers", "Sun Protection", "Hair Care"
@@ -46,9 +235,23 @@ export default function AdminProductsPage() {
     return matchesSearch && matchesCategory && matchesSkin;
   });
 
-  const handleDelete = (id: number) => {
-    if (confirm("Are you sure you want to delete this product?")) {
-      setProducts(products.filter((p) => p.id !== id));
+  const handleDelete = async (id: number) => {
+    if (!confirm("Are you sure you want to delete this product?")) return;
+
+    if (isDbConnected) {
+      try {
+        const { error } = await supabase.from("products").delete().eq("id", id);
+        if (error) throw error;
+        await refreshProducts();
+      } catch (err: any) {
+        alert("Failed to delete from database: " + err.message);
+      }
+    } else {
+      const updated = products.filter((p) => p.id !== id);
+      setProducts(updated);
+      if (typeof window !== "undefined") {
+        localStorage.setItem("beautybooth_local_products", JSON.stringify(updated));
+      }
     }
   };
 
@@ -59,10 +262,11 @@ export default function AdminProductsPage() {
     setNewSkinType("Normal");
     setNewPrice(1000);
     setNewOriginalPrice(1200);
+    setNewImageUrl("");
     setIsAddOpen(true);
   };
 
-  const handleAddProduct = (e: React.FormEvent) => {
+  const handleAddProduct = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newName || !newBrand) {
       alert("Please fill in Name and Brand");
@@ -86,8 +290,25 @@ export default function AdminProductsPage() {
       isFlashSale: false,
       isFlatPercentage: false
     };
-    setProducts([newProd, ...products]);
-    setIsAddOpen(false);
+
+    if (isDbConnected) {
+      try {
+        // Include the unique id in the payload to bypass sequence out-of-sync issues
+        const { error } = await supabase.from("products").insert([newProd]);
+        if (error) throw error;
+        await refreshProducts();
+        setIsAddOpen(false);
+      } catch (err: any) {
+        alert("Failed to add product to database: " + err.message);
+      }
+    } else {
+      const updated = [newProd, ...products];
+      setProducts(updated);
+      if (typeof window !== "undefined") {
+        localStorage.setItem("beautybooth_local_products", JSON.stringify(updated));
+      }
+      setIsAddOpen(false);
+    }
   };
 
   const handleOpenEdit = (prod: Product) => {
@@ -98,30 +319,53 @@ export default function AdminProductsPage() {
     setEditSkinType(prod.skinType);
     setEditPrice(prod.price);
     setEditOriginalPrice(prod.originalPrice);
+    setEditImageUrl(prod.imageUrl || "");
     setIsEditOpen(true);
   };
 
-  const handleEditProduct = (e: React.FormEvent) => {
+  const handleEditProduct = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!currentEdit) return;
     const discountVal = Math.round(((editOriginalPrice - editPrice) / editOriginalPrice) * 100);
-    const updated = products.map((p) => {
-      if (p.id === currentEdit.id) {
-        return {
-          ...p,
-          name: editName,
-          brand: editBrand.toUpperCase(),
-          category: editCategory,
-          skinType: editSkinType,
-          price: editPrice,
-          originalPrice: editOriginalPrice,
-          discount: discountVal > 0 ? discountVal : 0,
-        };
+    const updatedFields = {
+      name: editName,
+      brand: editBrand.toUpperCase(),
+      category: editCategory,
+      skinType: editSkinType,
+      price: editPrice,
+      originalPrice: editOriginalPrice,
+      discount: discountVal > 0 ? discountVal : 0,
+      imageUrl: editImageUrl,
+    };
+
+    if (isDbConnected) {
+      try {
+        const { error } = await supabase
+          .from("products")
+          .update(updatedFields)
+          .eq("id", currentEdit.id);
+        if (error) throw error;
+        await refreshProducts();
+        setIsEditOpen(false);
+      } catch (err: any) {
+        alert("Failed to edit product in database: " + err.message);
       }
-      return p;
-    });
-    setProducts(updated);
-    setIsEditOpen(false);
+    } else {
+      const updated = products.map((p) => {
+        if (p.id === currentEdit.id) {
+          return {
+            ...p,
+            ...updatedFields,
+          };
+        }
+        return p;
+      });
+      setProducts(updated);
+      if (typeof window !== "undefined") {
+        localStorage.setItem("beautybooth_local_products", JSON.stringify(updated));
+      }
+      setIsEditOpen(false);
+    }
   };
 
   return (
@@ -129,7 +373,7 @@ export default function AdminProductsPage() {
       
       {/* 1. Header controls */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <div className="flex flex-col gap-1">
+        <div className="flex flex-col gap-1.5">
           <h1 className="text-3xl font-black text-zinc-900 tracking-tight">Product Catalog</h1>
           <span className="text-[13px] font-bold text-zinc-400 uppercase tracking-widest">
             Manage {products.length} registered products
@@ -351,6 +595,24 @@ export default function AdminProductsPage() {
                 </div>
               </div>
 
+              <DragDropImageUpload
+                imageUrl={newImageUrl}
+                onUpload={(file) => handleImageUpload(file, false)}
+                uploading={uploading}
+              />
+
+              <div className="flex flex-col gap-1.5">
+                <label className="text-[10px] uppercase font-bold text-zinc-400">Or Paste Image URL</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="https://images.unsplash.com/..."
+                  value={newImageUrl}
+                  onChange={(e) => setNewImageUrl(e.target.value)}
+                  className="bg-zinc-50/50 border border-zinc-200 rounded-xl p-3 text-xs text-zinc-800 focus:outline-none focus:border-[#FF1A58] focus:bg-white font-semibold"
+                />
+              </div>
+
               <button
                 type="submit"
                 className="bg-[#FF1A58] hover:bg-[#e11d48] text-white py-3 rounded-xl text-xs font-black uppercase mt-4 transition-all shadow-md active:scale-95 duration-100 cursor-pointer"
@@ -442,6 +704,23 @@ export default function AdminProductsPage() {
                     className="bg-zinc-50/50 border border-zinc-200 rounded-xl p-3 text-xs text-zinc-800 focus:outline-none focus:border-[#FF1A58] focus:bg-white"
                   />
                 </div>
+              </div>
+
+              <DragDropImageUpload
+                imageUrl={editImageUrl}
+                onUpload={(file) => handleImageUpload(file, true)}
+                uploading={uploading}
+              />
+
+              <div className="flex flex-col gap-1.5">
+                <label className="text-[10px] uppercase font-bold text-zinc-400">Or Edit Image URL</label>
+                <input
+                  type="text"
+                  required
+                  value={editImageUrl}
+                  onChange={(e) => setEditImageUrl(e.target.value)}
+                  className="bg-zinc-50/50 border border-zinc-200 rounded-xl p-3 text-xs text-zinc-800 focus:outline-none focus:border-[#FF1A58] focus:bg-white font-semibold"
+                />
               </div>
 
               <button
