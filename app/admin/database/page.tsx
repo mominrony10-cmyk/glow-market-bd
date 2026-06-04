@@ -125,7 +125,46 @@ ON CONFLICT (id) DO NOTHING;
 CREATE POLICY "Public Access Objects" ON storage.objects FOR SELECT USING (bucket_id = 'products');
 CREATE POLICY "Public Insert Objects" ON storage.objects FOR INSERT WITH CHECK (bucket_id = 'products');
 CREATE POLICY "Public Update Objects" ON storage.objects FOR UPDATE USING (bucket_id = 'products') WITH CHECK (bucket_id = 'products');
-CREATE POLICY "Public Delete Objects" ON storage.objects FOR DELETE USING (bucket_id = 'products');`;
+CREATE POLICY "Public Delete Objects" ON storage.objects FOR DELETE USING (bucket_id = 'products');
+
+-- 13. Create profiles table linked to Supabase Auth users
+CREATE TABLE IF NOT EXISTS public.profiles (
+  id UUID PRIMARY KEY REFERENCES auth.users ON DELETE CASCADE,
+  email TEXT UNIQUE NOT NULL,
+  role TEXT NOT NULL DEFAULT 'user'
+);
+
+ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Allow public read profiles" ON public.profiles FOR SELECT USING (true);
+CREATE POLICY "Allow individual update profiles" ON public.profiles FOR UPDATE USING (auth.uid() = id);
+
+-- Create trigger function to automatically assign admin role on signup
+CREATE OR REPLACE FUNCTION public.handle_new_user()
+RETURNS trigger AS $$
+BEGIN
+  INSERT INTO public.profiles (id, email, role)
+  VALUES (
+    new.id, 
+    new.email, 
+    CASE WHEN new.email = 'admin@glowmarketbd.com' THEN 'admin' ELSE 'user' END
+  );
+  RETURN new;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Bind trigger to auth.users table
+DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
+CREATE TRIGGER on_auth_user_created
+  AFTER INSERT ON auth.users
+  FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
+
+-- Seed profile for existing admin users (if any exist)
+INSERT INTO public.profiles (id, email, role)
+SELECT id, email, 'admin'
+FROM auth.users
+WHERE email = 'admin@glowmarketbd.com'
+ON CONFLICT (id) DO NOTHING;`;
 
   const verifyConnection = async () => {
     if (!hasValidSupabaseConfig) {
