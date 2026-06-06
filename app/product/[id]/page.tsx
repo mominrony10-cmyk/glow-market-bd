@@ -15,7 +15,6 @@ import {
   ArrowReloadHorizontalIcon,
   CleanIcon,
   FireIcon,
-  AiPhone01Icon,
   BarCode01Icon,
   Award01Icon,
 } from "@hugeicons/core-free-icons";
@@ -116,8 +115,6 @@ export default function ProductDetailPage({ params }: PageProps) {
       setTimeout(() => setCopied(false), 3000);
     }
   };
-
-  const appPrice = Math.round(product.price * 0.88); // 12% extra discount for App Price!
 
   return (
     <div className="bg-white min-h-screen">
@@ -238,30 +235,17 @@ export default function ProductDetailPage({ params }: PageProps) {
             </div>
 
             {/* Interactive Buy and Add Actions */}
-            <div className="flex flex-col sm:flex-row gap-3 select-none">
+            <div className="select-none">
               <button
                 onClick={() => {
                   addToCart(product);
                   setToastMessage(`"${product.name.substring(0, 30)}..." added! Checkout now.`);
                   setShowCartDrawer(true);
                 }}
-                className="flex-1 bg-[#FF1A58] hover:bg-[#e11d48] text-white font-bold text-sm py-3.5 rounded-full transition-colors flex items-center justify-center gap-2 cursor-pointer"
+                className="w-full bg-[#FF1A58] hover:bg-[#e11d48] text-white font-bold text-sm py-3.5 rounded-full transition-colors flex items-center justify-center gap-2 cursor-pointer"
               >
                 <HugeiconsIcon icon={ShoppingBag01Icon} size={18} />
                 Add to bag
-              </button>
-
-              <button
-                onClick={() => {
-                  addToCart({ ...product, price: appPrice });
-                  setToastMessage(`📱 App Promo Discount Applied! added to cart!`);
-                  setShowCartDrawer(true);
-                }}
-                className="flex-1 bg-white hover:bg-rose-50 border-2 border-[#FF1A58] text-zinc-800 font-bold text-sm py-3.5 rounded-full transition-colors flex items-center justify-center gap-2 cursor-pointer"
-              >
-                <HugeiconsIcon icon={AiPhone01Icon} size={18} className="text-[#FF1A58]" />
-                App Price: ৳{appPrice}
-                <HugeiconsIcon icon={ArrowRight01Icon} size={16} className="text-[#FF1A58] ml-1" />
               </button>
             </div>
 
