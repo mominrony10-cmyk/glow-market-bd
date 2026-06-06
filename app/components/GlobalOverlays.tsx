@@ -39,6 +39,60 @@ export default function GlobalOverlays() {
   const [customerAddress, setCustomerAddress] = useState("");
   const [placingOrder, setPlacingOrder] = useState(false);
 
+  // Auto-prefill delivery fields if user is logged in
+  useEffect(() => {
+    const prefillDeliveryInfo = async () => {
+      if (!showCheckoutModal) return;
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session) {
+          const { data: profileData, error: profileError } = await supabase
+            .from("profiles")
+            .select("*")
+            .eq("id", session.user.id)
+            .single();
+
+          if (profileError) {
+            if (
+              profileError.code === "PGRST205" ||
+              profileError.message?.includes("public.profiles") ||
+              profileError.message?.includes("schema cache")
+            ) {
+              const localName = localStorage.getItem("userName");
+              const localPhone = localStorage.getItem("userPhone");
+              const localAddress = localStorage.getItem("beautybooth_local_address");
+              const localCity = localStorage.getItem("beautybooth_local_city");
+              const localZip = localStorage.getItem("beautybooth_local_zip");
+
+              if (localName) setCustomerName(localName);
+              if (localPhone) setCustomerPhone(localPhone);
+              
+              const fullAddress = [localAddress, localCity, localZip].filter(Boolean).join(", ");
+              if (fullAddress) setCustomerAddress(fullAddress);
+              return;
+            }
+          }
+
+          if (profileData) {
+            if (profileData.name) setCustomerName(profileData.name);
+            if (profileData.phone) setCustomerPhone(profileData.phone);
+            
+            const fullAddress = [
+              profileData.address,
+              profileData.city,
+              profileData.zip
+            ].filter(Boolean).join(", ");
+            if (fullAddress) setCustomerAddress(fullAddress);
+          }
+        }
+      } catch (err) {
+        console.error("Error prefilling delivery info:", err);
+      }
+    };
+
+    prefillDeliveryInfo();
+  }, [showCheckoutModal]);
+
   const handlePlaceOrder = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!customerName || !customerPhone || !customerAddress) {

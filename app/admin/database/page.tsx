@@ -131,7 +131,13 @@ CREATE POLICY "Public Delete Objects" ON storage.objects FOR DELETE USING (bucke
 CREATE TABLE IF NOT EXISTS public.profiles (
   id UUID PRIMARY KEY REFERENCES auth.users ON DELETE CASCADE,
   email TEXT UNIQUE NOT NULL,
-  role TEXT NOT NULL DEFAULT 'user'
+  role TEXT NOT NULL DEFAULT 'user',
+  name TEXT,
+  phone TEXT,
+  address TEXT,
+  city TEXT,
+  zip TEXT,
+  avatar TEXT
 );
 
 ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
@@ -143,11 +149,13 @@ CREATE POLICY "Allow individual update profiles" ON public.profiles FOR UPDATE U
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS trigger AS $$
 BEGIN
-  INSERT INTO public.profiles (id, email, role)
+  INSERT INTO public.profiles (id, email, role, name, phone)
   VALUES (
     new.id, 
     new.email, 
-    CASE WHEN new.email = 'admin@glowmarketbd.com' THEN 'admin' ELSE 'user' END
+    CASE WHEN new.email = 'admin@glowmarketbd.com' THEN 'admin' ELSE 'user' END,
+    coalesce(new.raw_user_meta_data->>'name', ''),
+    coalesce(new.raw_user_meta_data->>'phone', '')
   );
   RETURN new;
 END;

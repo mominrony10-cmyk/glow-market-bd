@@ -101,7 +101,21 @@ export default function AdminOrdersPage() {
           .order("date", { ascending: false });
         if (error) throw error;
         if (data) {
-          liveOrders = data;
+          liveOrders = data.map((o: any) => {
+            let itemsArray = [];
+            try {
+              itemsArray = typeof o.items === "string" ? JSON.parse(o.items) : o.items;
+            } catch (e) {
+              itemsArray = o.items || [];
+            }
+            if (!Array.isArray(itemsArray)) {
+              itemsArray = [itemsArray].filter(Boolean);
+            }
+            return {
+              ...o,
+              items: itemsArray
+            };
+          });
         }
       } catch (err) {
         console.error("Failed to fetch live orders from Supabase:", err);
@@ -112,7 +126,22 @@ export default function AdminOrdersPage() {
     let localOrders = [];
     if (typeof window !== "undefined") {
       const localOrdersStr = localStorage.getItem("beautybooth_local_orders");
-      localOrders = localOrdersStr ? JSON.parse(localOrdersStr) : [];
+      const rawLocal = localOrdersStr ? JSON.parse(localOrdersStr) : [];
+      localOrders = rawLocal.map((o: any) => {
+        let itemsArray = [];
+        try {
+          itemsArray = typeof o.items === "string" ? JSON.parse(o.items) : o.items;
+        } catch (e) {
+          itemsArray = o.items || [];
+        }
+        if (!Array.isArray(itemsArray)) {
+          itemsArray = [itemsArray].filter(Boolean);
+        }
+        return {
+          ...o,
+          items: itemsArray
+        };
+      });
     }
     
     // Merge live orders and local orders

@@ -100,7 +100,7 @@ export default function AdminDashboardOverview() {
   useEffect(() => {
     const fetchOrders = async () => {
       setLoading(true);
-      let liveOrders: Order[] = [];
+      let liveOrders = [];
       if (isDbConnected) {
         try {
           const { data, error } = await supabase
@@ -109,17 +109,46 @@ export default function AdminDashboardOverview() {
             .order("date", { ascending: false });
           if (error) throw error;
           if (data) {
-            liveOrders = data as Order[];
+            liveOrders = data.map((o: any) => {
+              let itemsArray = [];
+              try {
+                itemsArray = typeof o.items === "string" ? JSON.parse(o.items) : o.items;
+              } catch (e) {
+                itemsArray = o.items || [];
+              }
+              if (!Array.isArray(itemsArray)) {
+                itemsArray = [itemsArray].filter(Boolean);
+              }
+              return {
+                ...o,
+                items: itemsArray
+              };
+            });
           }
         } catch (err) {
           console.error("Failed to fetch live orders from Supabase:", err);
         }
       }
       
-      let localOrders: Order[] = [];
+      let localOrders = [];
       if (typeof window !== "undefined") {
         const localOrdersStr = localStorage.getItem("beautybooth_local_orders");
-        localOrders = localOrdersStr ? JSON.parse(localOrdersStr) : [];
+        const rawLocal = localOrdersStr ? JSON.parse(localOrdersStr) : [];
+        localOrders = rawLocal.map((o: any) => {
+          let itemsArray = [];
+          try {
+            itemsArray = typeof o.items === "string" ? JSON.parse(o.items) : o.items;
+          } catch (e) {
+            itemsArray = o.items || [];
+          }
+          if (!Array.isArray(itemsArray)) {
+            itemsArray = [itemsArray].filter(Boolean);
+          }
+          return {
+            ...o,
+            items: itemsArray
+          };
+        });
       }
       
       let mergedOrders = [...liveOrders];
